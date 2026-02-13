@@ -9,7 +9,7 @@ CivicSweep is a mobile-first waste reporting and resolution platform that connec
 - Enables vendors to view assigned work and upload completion proof.
 - Provides a consistent, role-based dashboard for each user type.
 
-## Who It?s For
+## Who It's For
 - Citizens: report issues quickly and track progress.
 - Vendors: receive assignments and confirm completion with photo proof.
 - Administrators: coordinate vendors, manage status, and audit reports.
