@@ -1,0 +1,260 @@
+:root {
+  --bg1: #f5f7fb;
+  --bg2: #eef2ff;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --ring: 0 0 0 4px rgba(16, 185, 129, 0.25);
+  --ease: cubic-bezier(0.22, 0.8, 0.36, 1);
+}
+
+.dark {
+  --bg1: #0b1220;
+  --bg2: #0f172a;
+  --ink: #e2e8f0;
+  --muted: #94a3b8;
+  --ring: 0 0 0 4px rgba(16, 185, 129, 0.25);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--ink);
+  background: radial-gradient(1200px 600px at 10% -10%, #d1fae5 0, transparent 60%),
+              radial-gradient(1000px 500px at 110% -20%, #dbeafe 0, transparent 60%),
+              linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+
+.no-x-scroll {
+  overflow-x: hidden;
+}
+
+.dark body {
+  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.12) 0, transparent 60%),
+              radial-gradient(800px 380px at 110% -20%, rgba(56,189,248,0.12) 0, transparent 60%),
+              linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+
+h1, h2, h3 {
+  font-family: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(1px 1px at 20px 20px, rgba(15, 23, 42, 0.08), transparent 40%);
+  opacity: 0.2;
+  z-index: -1;
+}
+
+.dark body::before {
+  opacity: 0.15;
+}
+
+.app-shell { position: relative; }
+
+/* Force visible theme changes even if Tailwind dark variants don't apply */
+html[data-theme="dark"] body {
+  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.12) 0, transparent 60%),
+              radial-gradient(800px 380px at 110% -20%, rgba(56,189,248,0.12) 0, transparent 60%),
+              linear-gradient(180deg, #0b1220, #0f172a) !important;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] nav {
+  background-color: rgba(2, 6, 23, 0.75) !important;
+  border-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+html[data-theme="dark"] [class*="bg-white"] {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+html[data-theme="dark"] [class*="text-slate-"] {
+  color: #cbd5f5 !important;
+}
+
+html[data-theme="dark"] [class*="border-slate-"] {
+  border-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+#vendorDash {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+#vendorDash table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+#vendorDash td,
+#vendorDash th {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+#vendorDash img,
+#vendorDash input,
+#vendorDash button,
+#vendorDash select {
+  max-width: 100%;
+}
+
+#vendorDash .grid,
+#vendorDash .flex {
+  min-width: 0;
+}
+
+#progressbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, #34d399, #22c55e);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  z-index: 60;
+  box-shadow: 0 1px 0 rgba(16, 185, 129, 0.4);
+}
+
+.screen {
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.screen.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+#rPreview {
+  max-height: 220px;
+}
+
+.panel-reveal {
+  animation: panelFade 260ms var(--ease) both;
+}
+
+.row-reveal {
+  animation: rowFade 360ms var(--ease) both;
+}
+
+.report-thumb {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.4);
+  box-shadow: 0 6px 16px rgba(15,23,42,.12);
+  cursor: zoom-in;
+}
+
+.report-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.4);
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #475569;
+  background: rgba(248,250,252,.9);
+}
+
+.dark .report-chip {
+  color: #cbd5f5;
+  background: rgba(15,23,42,.6);
+  border-color: rgba(148,163,184,.25);
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.map-pulse {
+  animation: mapPulse 280ms var(--ease);
+}
+
+@keyframes panelFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rowFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mapPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+#map { min-height: 280px; }
+
+[data-loading="true"] {
+  position: relative;
+}
+
+[data-loading="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(2px) saturate(120%);
+  border-radius: inherit;
+  z-index: 5;
+}
+
+.dark [data-loading="true"]::after {
+  background: rgba(2, 6, 23, 0.55);
+}
+
+[data-loading="true"]::before {
+  content: "";
+  position: absolute;
+  z-index: 6;
+  inset: auto auto 50% 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(16,185,129,1) 0 25%, rgba(16,185,129,0.2) 25% 100%);
+  mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(1turn); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .screen { transform: none !important; }
+}
+
+body.density-compact { font-size: 0.88rem; }
+
+body.density-compact .rounded-2xl { padding: 1rem !important; }
+body.density-compact .rounded-xl { padding: 0.9rem !important; }
+body.density-compact .p-6 { padding: 1rem !important; }
+body.density-compact .p-5 { padding: 0.9rem !important; }
+body.density-compact .p-4 { padding: 0.75rem !important; }
+body.density-compact .p-3 { padding: 0.6rem !important; }
+body.density-compact .py-3 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+body.density-compact .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
