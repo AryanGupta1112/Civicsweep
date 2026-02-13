@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src https://civicsweep-api.onrender.com https://nominatim.openstreetmap.org; object-src 'none'; base-uri 'none'">
+    <title>CivicSweep</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="fonts/fonts.css"/>
+
+    <!-- Tailwind (utilities) -->
+    <script>tailwind = { config: { darkMode: "class" } };</script>
+    <script src="vendor/tailwind/tailwind.js"></script>
+
+    <!-- Flowbite (components) -->
+    <link href="vendor/flowbite/flowbite.min.css" rel="stylesheet"/>
+
+    <!-- Icons -->
+    <link href="vendor/remixicon/remixicon.css" rel="stylesheet">
+
+    <!-- Leaflet (OSM map) -->
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
+    <script src="vendor/leaflet/leaflet.js"></script>
+
+    <!-- Toasts -->
+    <link rel="stylesheet" href="vendor/notyf/notyf.min.css">
+
+    <!-- Our styles -->
+    <link rel="stylesheet" href="style.css"/>
+</head>
+
+<body class="min-h-screen">
+<div id="progressbar" aria-hidden="true"></div>
+
+<!-- Header -->
+<nav class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/75 backdrop-blur dark:border-slate-800 dark:bg-slate-950/75">
+    <div class="mx-auto flex min-h-16 w-full max-w-6xl flex-nowrap items-center justify-between gap-4 px-4">
+        <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-lg">
+                <span class="font-semibold">CS</span>
+            </div>
+            <div class="min-w-0 leading-tight">
+                <div class="truncate text-lg font-semibold tracking-tight">CivicSweep</div>
+                <div class="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">Waste reporting and resolution</div>
+            </div>
+            <span class="ml-2 hidden items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 sm:inline-flex dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">beta</span>
+        </div>
+        <div class="flex min-w-0 items-center gap-2">
+            <button id="densityToggle" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white/70 text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:focus:ring-emerald-900" title="Toggle density" aria-label="Toggle density" onclick="UI.toggleDensity?.()">
+                <i class="ri-line-height"></i>
+            </button>
+            <button id="themeToggle" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white/70 text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:focus:ring-emerald-900" title="Toggle theme" aria-label="Toggle theme" onclick="UI.toggleTheme?.()">
+                <i class="ri-moon-line"></i>
+            </button>
+            <div id="whoami" class="min-w-0 max-w-[45vw] truncate text-right text-sm text-slate-500 dark:text-slate-400 sm:max-w-[30vw]"></div>
+        </div>
+    </div>
+</nav>
+
+<main class="app-shell mx-auto max-w-6xl space-y-8 px-4 py-6">
+
+    <!-- Landing / Auth -->
+    <section id="authSection" class="screen">
+        <div class="grid gap-4 lg:grid-cols-3">
+            <div class="lg:col-span-2">
+                <div class="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
+                    <div class="absolute -right-24 -top-20 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-500/10"></div>
+                    <div class="absolute -left-24 -bottom-20 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-500/10"></div>
+                    <div class="relative">
+                        <h1 class="text-3xl font-semibold">Cleaner streets, faster response</h1>
+                        <p class="mt-2 text-slate-600 dark:text-slate-400">Report waste in seconds, assign vendors, and track resolutions from a single dashboard.</p>
+                        <div class="mt-5 flex flex-wrap items-center gap-2 text-xs">
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Realtime status</span>
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Geo-tagged reports</span>
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Photo proof</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid gap-4">
+                <div class="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Live updates</div>
+                    <div class="mt-2 text-2xl font-semibold">Unified workflow</div>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Users, vendors, and admins stay in sync.</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Smart routing</div>
+                    <div class="mt-2 text-2xl font-semibold">Map-driven</div>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Pinpoint issues and reduce response time.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mt-6 rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="border-b border-slate-200 dark:border-slate-800">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium" id="auth-tabs" data-tabs-toggle="#auth-tabs-content" data-tabs-active-classes="border-emerald-600 text-emerald-700 dark:text-emerald-300" data-tabs-inactive-classes="border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400" role="tablist">
+                    <li class="me-2" role="presentation">
+                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="user-tab" data-tabs-target="#tab-user" type="button" role="tab" aria-controls="tab-user" aria-selected="true">
+                            <i class="ri-user-line"></i>User
+                        </button>
+                    </li>
+                    <li class="me-2" role="presentation">
+                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="vendor-tab" data-tabs-target="#tab-vendor" type="button" role="tab" aria-controls="tab-vendor" aria-selected="false">
+                            <i class="ri-truck-line"></i>Vendor
+                        </button>
+                    </li>
+                    <li class="me-2" role="presentation">
+                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="admin-tab" data-tabs-target="#tab-admin" type="button" role="tab" aria-controls="tab-admin" aria-selected="false">
+                            <i class="ri-shield-user-line"></i>Admin
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div id="auth-tabs-content" class="p-4">
+                <!-- USER -->
+                <div id="tab-user" role="tabpanel" aria-labelledby="user-tab">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                            <h3 class="text-lg font-semibold">User login</h3>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginEmail">Email</label>
+                                    <input id="uLoginEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginPass">Password</label>
+                                    <input id="uLoginPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                                </div>
+                                <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.userLogin()">
+                                    <i class="ri-login-box-line"></i>Login
+                                </button>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                            <h3 class="text-lg font-semibold">Create account</h3>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uName">Full name</label>
+                                    <input id="uName" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="Jane Doe"/>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uEmail">Email</label>
+                                    <input id="uEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uPass">Password</label>
+                                    <input id="uPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Create a password"/>
+                                </div>
+                                <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.userSignup()">
+                                    <i class="ri-user-add-line"></i>Sign up
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VENDOR -->
+                <div class="hidden" id="tab-vendor" role="tabpanel" aria-labelledby="vendor-tab">
+                    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <h3 class="text-lg font-semibold">Vendor login</h3>
+                        <div class="mt-4 space-y-3">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vId">Vendor ID</label>
+                                <input id="vId" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="vendor1"/>
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vPass">Password</label>
+                                <input id="vPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                            </div>
+                            <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.vendorLogin()">
+                                <i class="ri-login-box-line"></i>Login
+                            </button>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Demo: vendor1/1234 or vendor2/1234</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN -->
+                <div class="hidden" id="tab-admin" role="tabpanel" aria-labelledby="admin-tab">
+                    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <h3 class="text-lg font-semibold">Admin login</h3>
+                        <div class="mt-4 space-y-3">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aEmail">Admin email</label>
+                                <input id="aEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="admin@city.local"/>
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aPass">Password</label>
+                                <input id="aPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                            </div>
+                            <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.adminLogin()">
+                                <i class="ri-shield-user-line"></i>Login
+                            </button>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Demo: admin@city.local / admin</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- USER DASH -->
+    <section id="userDash" class="screen hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-2xl font-semibold">Citizen dashboard</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Track reports and submit new issues with photos.</p>
+            </div>
+            <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Auth.logout()">
+                <i class="ri-logout-box-r-line"></i>Logout
+            </button>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-lg font-semibold">Report waste</h3>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Attach a photo and location</span>
+            </div>
+
+            <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <div class="space-y-3">
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rTitle">Title</label>
+                        <input id="rTitle" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Overflowing bin"/>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rDesc">Description</label>
+                        <textarea id="rDesc" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" rows="4" placeholder="Describe the issue..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rLat">Latitude</label>
+                            <input id="rLat" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Lat"/>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rLng">Longitude</label>
+                            <input id="rLng" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Lng"/>
+                        </div>
+                    </div>
+                    <div id="rAddr" class="text-xs text-slate-500 dark:text-slate-400"></div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Reports.useMyLocation()">
+                            <i class="ri-focus-2-line"></i>Use my location
+                        </button>
+                        <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="UI.openMapPicker()">
+                            <i class="ri-map-pin-line"></i>Pick on map
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rPhoto">Attach photo</label>
+                    <input id="rPhoto" class="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white/80 text-sm text-slate-700 shadow-sm focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" type="file" accept="image/*" capture="environment">
+                    <img id="rPreview" class="mt-3 hidden max-h-56 rounded-xl border border-slate-200 shadow-sm dark:border-slate-800" alt="preview">
+                </div>
+            </div>
+
+            <button class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Reports.submit()">
+                <i class="ri-send-plane-2-line"></i>Submit report
+            </button>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-lg font-semibold">My reports</h3>
+                <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshUserTable()">
+                    <i class="ri-refresh-line"></i>Refresh
+                </button>
+            </div>
+            <div id="userReports" class="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
+        </div>
+    </section>
+
+    <!-- VENDOR DASH -->
+    <section id="vendorDash" class="screen hidden overflow-x-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-2xl font-semibold">Vendor dashboard</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Complete assigned tasks and upload proof.</p>
+            </div>
+            <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Auth.logout()">
+                <i class="ri-logout-box-r-line"></i>Logout
+            </button>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-lg font-semibold">Assigned tasks</h3>
+                <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshVendorTable()">
+                    <i class="ri-refresh-line"></i>Refresh
+                </button>
+            </div>
+            <div id="vendorTasks" class="mt-4 overflow-x-hidden rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vReportId">Report ID</label>
+                    <input id="vReportId" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Report ID">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vProof">Proof photo</label>
+                    <input id="vProof" class="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white/80 text-sm text-slate-700 shadow-sm focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" type="file" accept="image/*" capture="environment">
+                </div>
+                <div class="flex items-end">
+                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Reports.vendorComplete()">
+                        <i class="ri-check-double-line"></i>Upload proof
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ADMIN DASH -->
+    <section id="adminDash" class="screen hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-2xl font-semibold">Admin dashboard</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Assign vendors and update report status.</p>
+            </div>
+            <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Auth.logout()">
+                <i class="ri-logout-box-r-line"></i>Logout
+            </button>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="grid gap-3 md:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aFilter">Filter status</label>
+                    <select id="aFilter" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" onchange="Reports.refreshAdminTable()">
+                        <option value="all">All</option>
+                        <option>NEW</option><option>ASSIGNED</option><option>IN_PROGRESS</option><option>RESOLVED</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aSearch">Search</label>
+                    <input id="aSearch" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Search title or description" oninput="Reports.refreshAdminTable()"/>
+                </div>
+                <div class="flex items-end">
+                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshAdminTable()">
+                        <i class="ri-refresh-line"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="adminReports" class="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aReportId">Report ID</label>
+                    <input id="aReportId" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Report ID">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aVendor">Vendor</label>
+                    <select id="aVendor" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"></select>
+                </div>
+                <div class="flex items-end">
+                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Reports.assign()">
+                        <i class="ri-user-shared-2-line"></i>Assign vendor
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 grid gap-3 md:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aStatusId">Report ID</label>
+                    <input id="aStatusId" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Report ID">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aStatusVal">Status</label>
+                    <select id="aStatusVal" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option>NEW</option><option>ASSIGNED</option><option>IN_PROGRESS</option><option>RESOLVED</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Reports.adminUpdateStatus()">
+                        <i class="ri-checkbox-circle-line"></i>Update status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Picker Modal -->
+    <div id="mapModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="w-full max-w-5xl">
+            <div id="mapModalCard" class="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-xl opacity-0 scale-95 transition duration-200 dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 class="text-lg font-semibold">Select location</h3>
+                    <div class="flex items-center gap-2">
+                        <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300" title="Zoom out" onclick="UI.zoomOutMap?.()"><i class="ri-subtract-line"></i></button>
+                        <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300" title="Zoom in" onclick="UI.zoomInMap?.()"><i class="ri-add-line"></i></button>
+                        <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300" aria-label="Close" onclick="UI.closeMapPicker()"><i class="ri-close-line"></i></button>
+                    </div>
+                </div>
+                <div id="map" class="mt-4 h-[55vh] min-h-[280px] w-full rounded-xl border border-slate-200 dark:border-slate-800"></div>
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-sm text-slate-500 dark:text-slate-400">Lat: <span id="mapLat">--</span> Lng: <span id="mapLng">--</span></div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200" onclick="Reports.useMyLocation()">
+                            <i class="ri-focus-2-line"></i>Use my location
+                        </button>
+                        <button class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700" onclick="UI.confirmMapPicker()">
+                            <i class="ri-check-line"></i>Use this point
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Preview Modal -->
+    <div id="photoModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target === this) UI.closePhotoModal()">
+        <div class="w-full max-w-4xl">
+            <div id="photoModalCard" class="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-xl opacity-0 scale-95 transition duration-200 dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 class="text-lg font-semibold">Report photo</h3>
+                    <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300" aria-label="Close" onclick="UI.closePhotoModal()"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="mt-4 flex items-center justify-center">
+                    <img id="photoModalImg" class="max-h-[70vh] w-auto max-w-full rounded-xl border border-slate-200 shadow-sm dark:border-slate-800" alt="Report photo preview">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Detail Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target === this) UI.closeReportModal()">
+        <div class="w-full max-w-4xl">
+            <div id="reportModalCard" class="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-xl opacity-0 scale-95 transition duration-200 dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <div>
+                        <h3 id="reportModalTitle" class="text-lg font-semibold">Report</h3>
+                        <div id="reportModalMeta" class="mt-1 text-xs text-slate-500 dark:text-slate-400"></div>
+                        <div id="reportModalReporter" class="mt-1 text-xs text-slate-500 dark:text-slate-400"></div>
+                    </div>
+                    <button class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300" aria-label="Close" onclick="UI.closeReportModal()"><i class="ri-close-line"></i></button>
+                </div>
+
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Description</div>
+                            <p id="reportModalDesc" class="mt-1 text-sm text-slate-700 dark:text-slate-200"></p>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Status</div>
+                            <div id="reportModalStatus" class="mt-1"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Location</div>
+                            <div id="reportModalLocation" class="mt-1 text-sm text-slate-700 dark:text-slate-200"></div>
+                            <div id="reportModalAddress" class="mt-1 text-xs text-slate-500 dark:text-slate-400"></div>
+                        </div>
+                        <div class="grid gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <div><span class="font-semibold text-slate-600 dark:text-slate-300">Created:</span> <span id="reportModalCreated"></span></div>
+                            <div><span class="font-semibold text-slate-600 dark:text-slate-300">Updated:</span> <span id="reportModalUpdated"></span></div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Photo</div>
+                            <div id="reportModalPhoto" class="mt-2"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Proof</div>
+                            <div id="reportModalProof" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="vendor/notyf/notyf.min.js"></script>
+<script src="app.js"></script>
+<script src="vendor/flowbite/flowbite.min.js"></script>
+</body>
+</html>
