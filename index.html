@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBL Presentation | 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+        body { background-color: #020617; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; scroll-behavior: smooth; background-image: radial-gradient(circle at 10% 10%, rgba(16,185,129,0.16), transparent 35%), radial-gradient(circle at 90% 20%, rgba(34,197,94,0.14), transparent 35%), radial-gradient(circle at 20% 80%, rgba(5,150,105,0.12), transparent 35%); background-size: 200% 200%; animation: bgShift 18s ease infinite; }
+        body::before, body::after { content: ""; position: fixed; inset: -20%; pointer-events: none; z-index: -1; mix-blend-mode: screen; opacity: 0.35; }
+        body::before { background: radial-gradient(circle at 30% 20%, rgba(16,185,129,0.14), transparent 40%), radial-gradient(circle at 70% 80%, rgba(34,197,94,0.14), transparent 45%); animation: aurora 22s ease infinite; }
+        body::after { background: radial-gradient(circle at 60% 30%, rgba(5,150,105,0.12), transparent 42%), radial-gradient(circle at 10% 70%, rgba(16,185,129,0.14), transparent 45%); animation: aurora 28s ease infinite reverse; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.35s ease, box-shadow 0.35s ease; position: relative; overflow: hidden; }
+        .glass::after { content: ""; position: absolute; inset: -40% -60%; background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.08), transparent 65%); transform: translateX(-120%); transition: transform 0.8s ease; pointer-events: none; display: none; }
+        .glass:hover::after { transform: translateX(120%); }
+        .glass:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35); }
+        .gradient-text { background: linear-gradient(120deg, #d1fae5, #6ee7b7, #10b981); background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: gradientShift 6s ease infinite; }
+
+        main > section { opacity: 0; transform: translateY(24px); animation: fadeUp 0.9s ease both; }
+        main > section:nth-of-type(1) { animation-delay: 0.10s; }
+        main > section:nth-of-type(2) { animation-delay: 0.20s; }
+        main > section:nth-of-type(3) { animation-delay: 0.30s; }
+        main > section:nth-of-type(4) { animation-delay: 0.40s; }
+        main > section:nth-of-type(5) { animation-delay: 0.50s; }
+        main > section:nth-of-type(6) { animation-delay: 0.60s; }
+        main > section:nth-of-type(7) { animation-delay: 0.70s; }
+        main > section:nth-of-type(8) { animation-delay: 0.80s; }
+        main > section:nth-of-type(9) { animation-delay: 0.90s; }
+        main > section:nth-of-type(10) { animation-delay: 1.00s; }
+
+        nav { animation: slideDown 0.6s ease both; }
+        nav a { position: relative; padding-bottom: 6px; }
+        nav a::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: linear-gradient(90deg, #6ee7b7, #10b981); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+        nav a:hover::after { transform: scaleX(1); }
+        #timerContainer { animation: popIn 0.6s ease both, floaty 6s ease-in-out infinite; }
+        #timerIcon { animation: wobble 3.5s ease-in-out infinite; }
+        .tag-pulse { animation: pulseGlow 3s ease-in-out infinite; }
+        canvas { animation: fadeUp 1s ease both; }
+        .glass i { animation: floaty 4.5s ease-in-out infinite; }
+        .reveal { opacity: 0; transform: translateY(18px) scale(0.98); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.in-view { opacity: 1; transform: translateY(0) scale(1); }
+        .scroll-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: linear-gradient(90deg, #6ee7b7, #10b981, #047857); box-shadow: 0 0 20px rgba(16,185,129,0.4); z-index: 1001; transition: width 0.1s linear; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 64px 64px; opacity: 0.12; mix-blend-mode: soft-light; pointer-events: none; z-index: -2; animation: gridMove 40s linear infinite; }
+        
+        /* TIMER UI - FIXED CONTRAST */
+        #timerContainer { background: #ffffff; color: #020617; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 3px solid #10b981; z-index: 1000; }
+        @keyframes flicker { 0%, 100% { background-color: #ffffff; } 50% { background-color: #fca5a5; } }
+        .timer-warning { animation: flicker 1s infinite; border: 3px solid #ef4444 !important; color: #b91c1c !important; }
+        .timer-stop { background-color: #991b1b !important; color: #ffffff !important; border: 3px solid #f87171 !important; animation: none; }
+
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(24px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { 0% { opacity: 0; transform: translateY(-12px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes wobble { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes aurora { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(2%, -2%, 0) scale(1.02); } 100% { transform: translate3d(0, 0, 0) scale(1); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 22px rgba(16,185,129,0.3); } }
+        @keyframes gridMove { 0% { background-position: 0 0, 0 0; } 100% { background-position: 128px 128px, 128px 128px; } }
+
+        /* Ensure muted text remains readable on dark background */
+        .text-slate-500 { color: #cbd5e1 !important; }
+        .text-slate-600 { color: #e2e8f0 !important; }
+        .text-slate-400 { color: #e2e8f0 !important; }
+        .opacity-50 { opacity: 0.85 !important; }
+        .opacity-70 { opacity: 0.9 !important; }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+        }
+    </style>
+</head>
+<body onload="startTimer()">
+
+    <div class="scroll-progress" id="scrollProgress"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <div id="timerContainer" class="fixed bottom-10 right-10 px-8 py-4 rounded-3xl flex items-center gap-4 transition-all">
+        <i class="fas fa-hourglass-start text-emerald-400 text-2xl" id="timerIcon"></i>
+        <span id="displayTime" class="text-4xl font-black font-mono tracking-tighter">00:00</span>
+    </div>
+
+    <nav class="fixed w-full z-50 glass border-b border-slate-800/50 px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="bg-white p-1 rounded flex items-center justify-center shadow-md" style="height: 48px; width: 48px;">
+                <img src="mujlogo.jpg" alt="MUJ" class="h-full w-auto object-contain" onerror="this.src='https://via.placeholder.com/50?text=MUJ'">
+            </div>
+            <div class="flex flex-col text-left">
+                <span class="text-xl font-black text-white leading-none uppercase tracking-tighter">PBL <span class="text-emerald-300 italic">2026</span></span>
+                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Dept. of Computer Science & Engineering</span>
+            </div>
+        </div>
+        <div class="hidden md:flex gap-8 text-[11px] uppercase tracking-widest font-bold opacity-70">
+            <a href="#problem" class="hover:text-emerald-300 transition">Problem</a>
+            <a href="#methodology" class="hover:text-emerald-300 transition">Methodology</a>
+            <a href="#theory" class="hover:text-emerald-300 transition">Theory</a>
+            <a href="#features" class="hover:text-emerald-300 transition">Features</a>
+            <a href="#architecture" class="hover:text-emerald-300 transition">Architecture</a>
+            <a href="#backend" class="hover:text-emerald-300 transition">Backend</a>
+            <a href="#results" class="hover:text-emerald-300 transition">Results</a>
+            <a href="#insights" class="hover:text-emerald-300 transition">Insights</a>
+            <a href="#deployment" class="hover:text-emerald-300 transition">Deployment</a>
+            <a href="#team" class="hover:text-emerald-300 transition">Team</a>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 pt-48 pb-32 space-y-32">
+        
+        <section class="text-center">
+            <div class="inline-block px-4 py-1 border border-slate-800 rounded-full text-slate-500 text-[10px] font-mono mb-6 uppercase tracking-widest tag-pulse">Registration No: 23FE10CSE00284 | 23FE10CSE00101</div>
+            <h1 class="text-6xl md:text-7xl font-extrabold mb-8 uppercase leading-tight"><span class="gradient-text uppercase">CivicSweep: Smart Waste Reporting</span></h1>
+            <p class="text-slate-400 max-w-2xl mx-auto italic text-lg leading-relaxed border-l-2 border-emerald-500/30 pl-6 text-left">
+                "Project Statement: A mobile-first, role-based workflow can reduce reporting friction and improve accountability for waste cleanup by connecting citizens, vendors, and city administrators in one system."
+            </p>
+        </section>
+
+        <section id="problem" class="grid md:grid-cols-2 gap-12 items-stretch">
+            <div class="glass p-10 rounded-[2.5rem] flex flex-col justify-center border-l-4 border-emerald-500">
+                <h2 class="text-3xl font-extrabold mb-6">Problem Statement</h2>
+                <p class="text-slate-400 leading-relaxed text-justify">Urban waste issues are often reported through scattered channels with limited visibility, slow assignment, and weak accountability. Citizens cannot track progress, admins lack structured workflows, and vendors miss clear task context. CivicSweep addresses this by unifying reporting, assignment, and resolution into a single, auditable flow.</p>
+            </div>
+            <div class="space-y-6">
+                <div class="glass p-7 rounded-3xl border-r-4 border-emerald-500/50">
+                    <h3 class="text-emerald-300 font-bold text-xs uppercase tracking-widest mb-2">Literature Review / Market Research</h3>
+                    <p class="text-sm text-slate-500 italic">Existing 311-style municipal apps and complaint portals focus on intake but rarely provide end-to-end assignment and closure visibility for all stakeholders.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl border-r-4 border-emerald-500/50">
+                    <h3 class="text-emerald-300 font-bold text-xs uppercase tracking-widest mb-2">Research Gap / Innovation</h3>
+                    <p class="text-sm text-slate-500 italic">CivicSweep adds role-based dashboards, geo-tagged reports with photos, vendor assignment, and proof of completion within a single workflow.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="methodology" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">System <span class="text-emerald-300">Methodology</span></h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-database text-emerald-300 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Dataset / Input</h3>
+                    <p class="text-sm text-slate-500">User inputs: report title/description, GPS coordinates, address lookup (OSM), and photo evidence.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-microchip text-emerald-400 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Model / Architecture</h3>
+                    <p class="text-sm text-slate-500">Android WebView front end + Node/Express API + Prisma ORM + PostgreSQL, hosted on Render.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center border-2 border-green-500/20 bg-green-500/5">
+                    <i class="fab fa-python text-green-500 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-4 uppercase text-xs tracking-widest text-green-400">Live Execution</h3>
+                    <a href="https://github.com/AryanGupta1112/Civicsweep" target="_blank" class="px-6 py-2 bg-green-600 rounded-full text-[10px] font-black hover:bg-green-500 transition shadow-lg shadow-green-900/40">VIEW CODE / DEMO</a>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="glass p-6 rounded-2xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 1</div>
+                    <h4 class="font-bold text-sm mb-2">Report Creation</h4>
+                    <p class="text-sm text-slate-500">Citizen enters title, description, and photo; GPS + address are captured automatically.</p>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 2</div>
+                    <h4 class="font-bold text-sm mb-2">Admin Review</h4>
+                    <p class="text-sm text-slate-500">Admin filters new reports, verifies details, and assigns a vendor.</p>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 3</div>
+                    <h4 class="font-bold text-sm mb-2">Vendor Action</h4>
+                    <p class="text-sm text-slate-500">Vendor views assigned tasks and uploads completion proof.</p>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 4</div>
+                    <h4 class="font-bold text-sm mb-2">Closure & Audit</h4>
+                    <p class="text-sm text-slate-500">Admin confirms proof, updates status, and closes the report.</p>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Simple Workflow Summary</h3>
+                <p class="text-sm text-slate-500 leading-relaxed">CivicSweep follows a clear loop: <span class="text-emerald-300 font-semibold">Report -> Assign -> Resolve -> Verify</span>. Each step updates status in real time, so citizens and admins can see progress without manual follow-ups.</p>
+            </div>
+        </section>
+
+        <section id="theory" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Theory & <span class="text-emerald-300">Background</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Urban Service Workflow</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Public service requests follow a lifecycle: report intake, validation, assignment, execution, and closure. Delays often occur at assignment and proof stages, so CivicSweep focuses on reducing handoffs and improving traceability.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Accountability Model</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Role-based access (citizen, admin, vendor) ensures each stakeholder sees only relevant actions. This aligns with governance principles: transparency, timeliness, and auditable outcomes.</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Data Quality</h4>
+                    <p class="text-sm text-slate-500">Geo-tag + photo increases report accuracy and reduces duplicate entries.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Operational Latency</h4>
+                    <p class="text-sm text-slate-500">Structured assignment reduces time-to-action and missed tasks.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Citizen Trust</h4>
+                    <p class="text-sm text-slate-500">Status visibility improves confidence in municipal response.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Core <span class="text-emerald-300">Features</span></h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-map-marker-alt text-emerald-300 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Geo-Tagged Reports</h3>
+                    <p class="text-sm text-slate-500">Capture location with map previews and address lookup for precise issue tracking.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-camera text-emerald-400 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Photo Evidence</h3>
+                    <p class="text-sm text-slate-500">Attach photos for proof, verification, and completion auditing.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-people-arrows text-green-500 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Role-Based Workflow</h3>
+                    <p class="text-sm text-slate-500">Separate dashboards for citizens, admins, and vendors with clear actions.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">System <span class="text-emerald-300">Architecture</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Client Layer</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Android app hosting a responsive WebView UI (HTML/CSS/JS). Handles authentication, report creation, dashboards, and image capture.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Service Layer</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Node/Express API with Prisma ORM, role-based access, report lifecycle management, and PostgreSQL persistence.</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Authentication</h4>
+                    <p class="text-sm text-slate-500">JWT-based login for citizens, vendors, and admins.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Workflow Engine</h4>
+                    <p class="text-sm text-slate-500">Status transitions: New -> Assigned -> In Progress -> Resolved.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Audit Trail</h4>
+                    <p class="text-sm text-slate-500">Report history and vendor proof stored for accountability.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="backend" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Backend on <span class="text-emerald-300">Render</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">civicsweep-api Service</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Private Node/Express service hosted on Render. It exposes secure REST endpoints for authentication, report creation, vendor assignment, status updates, and proof uploads.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed mt-3">Prisma ORM connects the API to PostgreSQL for reliable persistence of users, vendors, and reports.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Data & Storage</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Render PostgreSQL stores report metadata, status history, and user/vendor accounts. Photos are sent as base64 and stored with each report for audit and closure proof.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed mt-3">Environment variables manage secrets (JWT keys, database URL), keeping deployments safe and repeatable.</p>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Request Flow (Simplified)</h3>
+                <div class="grid md:grid-cols-4 gap-4 text-center">
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">1. Client</div>
+                        <p class="text-sm text-slate-500">User submits report from WebView app.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">2. API</div>
+                        <p class="text-sm text-slate-500">Render API validates JWT and request payload.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">3. DB</div>
+                        <p class="text-sm text-slate-500">Prisma writes report + photo to PostgreSQL.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">4. UI</div>
+                        <p class="text-sm text-slate-500">Updated report appears in dashboards.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results" class="glass p-12 rounded-[3.5rem] border-t-4 border-emerald-500">
+            <h2 class="text-3xl font-black mb-12 text-center uppercase tracking-tight">Results & <span class="text-emerald-300">Analysis</span></h2>
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="h-80"><canvas id="resultsChart"></canvas></div>
+                <div class="space-y-6">
+                    <div class="p-6 rounded-2xl bg-white/5 flex justify-between items-center border border-white/10 shadow-inner">
+                        <span class="text-slate-400 font-bold uppercase text-xs tracking-widest">Accuracy / Performance</span>
+                        <span id="perfMetric" data-target="92" class="text-emerald-300 font-mono font-black text-3xl">92%</span>
+                    </div>
+                    <p class="text-slate-500 text-sm italic text-justify leading-relaxed">Prototype demos show faster reporting, clearer assignment visibility, and cleaner closure tracking compared to manual or fragmented systems.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="insights" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Evaluation <span class="text-emerald-300">Plan</span></h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl text-center">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">KPIs to Measure</div>
+                    <p class="text-sm text-slate-500 mt-2">Time-to-assign, time-to-resolve, first-response rate, and closure proof completeness.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Pilot Setup</div>
+                    <p class="text-sm text-slate-500 mt-2">Small-zone rollout with controlled vendor roster and admin workflow training.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Data Collection</div>
+                    <p class="text-sm text-slate-500 mt-2">In-app logs, assignment timestamps, status transitions, and photo proof audits.</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Validation Strategy</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Compare manual reporting baselines with CivicSweep pilots across identical areas and time windows. Track improvements in response times, task completion, and citizen satisfaction.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Risk & Mitigation</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Potential risks include inconsistent vendor updates and incomplete photos. Mitigate with workflow prompts, proof validation, and admin review checkpoints.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="deployment" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Deployment & <span class="text-emerald-300">Operations</span></h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-cloud text-emerald-300 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Render Hosting</h3>
+                    <p class="text-sm text-slate-500">Private API deployed on Render with managed PostgreSQL.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-shield-alt text-emerald-400 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Security</h3>
+                    <p class="text-sm text-slate-500">Role-based access control and token validation for every request.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-sync-alt text-green-500 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Maintainability</h3>
+                    <p class="text-sm text-slate-500">Prisma migrations and structured APIs for rapid iteration.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass p-12 rounded-[3.5rem] border-t-4 border-emerald-500">
+            <h2 class="text-3xl font-black mb-10 text-center uppercase tracking-tight">Impact</h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="space-y-4">
+                    <div class="glass p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Immediate Impact</h3>
+                        <p class="text-sm text-slate-500">Improved transparency, faster routing to vendors, and higher citizen trust through visible status updates.</p>
+                    </div>
+                    <div class="glass p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Scalability</h3>
+                        <p class="text-sm text-slate-500">Modular dashboards allow new departments, categories, or regions to be added without redesign.</p>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="glass p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Future Enhancements</h3>
+                        <p class="text-sm text-slate-500">Analytics dashboard, SLA alerts, vendor performance scoring, and AI-assisted categorization.</p>
+                    </div>
+                    <div class="glass p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Community Engagement</h3>
+                        <p class="text-sm text-slate-500">Gamified citizen reporting and reward systems for clean neighborhoods.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="limitations" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Limitations & <span class="text-emerald-300">Future Work</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Current Limitations</h3>
+                    <ul class="text-sm text-slate-500 leading-relaxed space-y-2">
+                        <li>Prototype evaluation is pending large-scale pilot data.</li>
+                        <li>Limited vendor coverage in early deployments.</li>
+                        <li>Dependence on stable internet and GPS availability.</li>
+                        <li>Manual verification still required for certain edge cases.</li>
+                    </ul>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Planned Enhancements</h3>
+                    <ul class="text-sm text-slate-500 leading-relaxed space-y-2">
+                        <li>Analytics dashboard for admins and policy insights.</li>
+                        <li>Offline mode with queued uploads.</li>
+                        <li>Automated issue categorization using AI.</li>
+                        <li>Vendor performance scoring and SLA alerts.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="team" class="text-center pt-10 border-t border-slate-900">
+            <h2 class="text-[10px] font-black text-slate-600 uppercase tracking-[0.5em] mb-12">Academic Credits</h2>
+            <div class="flex flex-wrap justify-center gap-10">
+                <div class="glass px-12 py-8 rounded-[2rem] border-b-4 border-emerald-500">
+                    <p class="text-[9px] font-bold text-emerald-300 mb-2 uppercase tracking-widest">Project Guide</p>
+                    <p class="font-black text-xl text-slate-100">Dr. Neelam Chaplot</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Department of CSE</p>
+                </div>
+                <div class="glass px-12 py-8 rounded-[2rem] border-b-4 border-emerald-700">
+                    <p class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Team Member</p>
+                    <p class="font-black text-xl text-slate-100">Aryan Gupta</p>
+                    <p class="text-[10px] text-slate-500 mt-1">CSE | 2026</p>
+                </div>
+                <div class="glass px-12 py-8 rounded-[2rem] border-b-4 border-emerald-700">
+                    <p class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Team Member</p>
+                    <p class="font-black text-xl text-slate-100">Shashwat Rana</p>
+                    <p class="text-[10px] text-slate-500 mt-1">CSE | 2026</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-12 text-center bg-black/40 border-t border-slate-900">
+        <p class="text-slate-600 text-[10px] font-bold tracking-[0.3em] uppercase mb-2">Manipal University Jaipur</p>
+        <p class="text-slate-500 text-[9px] font-medium tracking-[0.2em] uppercase opacity-50">Department of Computer Science & Engineering - 2026</p>
+    </footer>
+
+    <script>
+        // TIMER LOGIC
+        let sec = 0;
+        let timer = null;
+        function startTimer() {
+            timer = setInterval(() => {
+                sec++;
+                let m = Math.floor(sec / 60);
+                let s = sec % 60;
+                document.getElementById('displayTime').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if (sec >= 480 && sec < 600) { // 8-10 Mins Warning
+                    document.getElementById('timerContainer').classList.add('timer-warning');
+                    document.getElementById('timerIcon').classList.replace('fa-hourglass-start', 'fa-hourglass-half');
+                } else if (sec >= 600) { // 10 Mins Stop
+                    clearInterval(timer);
+                    document.getElementById('timerContainer').classList.replace('timer-warning', 'timer-stop');
+                    document.getElementById('displayTime').innerText = "10:00";
+                    document.getElementById('timerIcon').classList.replace('fa-hourglass-half', 'fa-hourglass-end');
+                }
+            }, 1000);
+        }
+
+        // Scroll progress
+        const progress = document.getElementById('scrollProgress');
+        window.addEventListener('scroll', () => {
+            const h = document.documentElement;
+            const max = h.scrollHeight - h.clientHeight;
+            const pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+            if (progress) progress.style.width = `${pct}%`;
+        });
+
+        // Reveal on scroll
+        const revealTargets = document.querySelectorAll('main .glass');
+        revealTargets.forEach((el) => el.classList.add('reveal'));
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+        revealTargets.forEach((el) => observer.observe(el));
+
+        // Count-up animation for metric
+        const metric = document.getElementById('perfMetric');
+        if (metric) {
+            const target = parseInt(metric.getAttribute('data-target') || '0', 10);
+            const duration = 1200;
+            const start = performance.now();
+            const step = (now) => {
+                const t = Math.min(1, (now - start) / duration);
+                const val = Math.floor(target * t);
+                metric.textContent = `${val}%`;
+                if (t < 1) requestAnimationFrame(step);
+                else metric.textContent = `${target}%`;
+            };
+            requestAnimationFrame(step);
+        }
+
+        // RESULTS CHART (Demo Data)
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Manual Reporting', 'CivicSweep'],
+                datasets: [{
+                    data: [65, 92],
+                    backgroundColor: ['#111827', '#10b981'],
+                    borderRadius: 15,
+                    barThickness: 50
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#ffffff05' }, ticks: { color: '#475569' } },
+                    x: { grid: { display: false }, ticks: { color: '#475569' } }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
+
+
