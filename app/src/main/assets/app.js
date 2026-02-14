@@ -305,7 +305,8 @@ const Vendors = {
     this.cache.forEach(v => {
       const opt = document.createElement("option");
       opt.value = String(v.id ?? "");
-      opt.textContent = `${v.name ?? ""} (${v.id ?? ""})`.trim();
+      const tag = v.wasteType ? `${v.wasteType}` : "general";
+      opt.textContent = `${v.name ?? ""} (${tag})`.trim();
       sel.appendChild(opt);
     });
   }
@@ -1097,6 +1098,8 @@ const UI = {
     const reporter = $("#reportModalReporter");
     const desc = $("#reportModalDesc");
     const status = $("#reportModalStatus");
+    const waste = $("#reportModalWaste");
+    const auto = $("#reportModalAuto");
     const loc = $("#reportModalLocation");
     const addr = $("#reportModalAddress");
     const created = $("#reportModalCreated");
@@ -1125,6 +1128,24 @@ const UI = {
       chip.className = `inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${map[k] || map.new}`;
       chip.textContent = r.status || "NEW";
       status.appendChild(chip);
+    }
+
+    if (waste) {
+      if (r.wasteType) {
+        const pct = r.wasteConfidence != null ? Math.round(Number(r.wasteConfidence) * 100) : null;
+        waste.textContent = pct != null ? `${r.wasteType} (${pct}%)` : r.wasteType;
+      } else {
+        waste.textContent = "Not detected";
+      }
+    }
+
+    if (auto) {
+      auto.textContent = "";
+      auto.className = "mt-2";
+      if (r.autoAssignNote) {
+        auto.textContent = r.autoAssignNote;
+        auto.className = "mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
+      }
     }
 
     const lat = Number(r.lat);
