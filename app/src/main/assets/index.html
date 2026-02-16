@@ -54,6 +54,7 @@
             <button id="themeToggle" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white/70 text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:focus:ring-emerald-900" title="Toggle theme" aria-label="Toggle theme" onclick="UI.toggleTheme?.()">
                 <i class="ri-moon-line"></i>
             </button>
+            <span id="netStatus" class="hidden items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">Offline</span>
             <div id="whoami" class="min-w-0 max-w-[45vw] truncate text-right text-sm text-slate-500 dark:text-slate-400 sm:max-w-[30vw]"></div>
         </div>
     </div>
@@ -95,6 +96,12 @@
 
         <!-- Tabs -->
         <div class="mt-6 rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div id="offlineResume" class="hidden border-b border-slate-200 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-slate-800 dark:bg-amber-950/40 dark:text-amber-200">
+                <div class="font-semibold">Offline login</div>
+                <div class="mt-1 text-[11px] text-amber-900/70 dark:text-amber-200/70">
+                    If you already signed in on this device, you can login offline using the same credentials. Otherwise, please wait until you’re online.
+                </div>
+            </div>
             <div class="border-b border-slate-200 dark:border-slate-800">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium" id="auth-tabs" data-tabs-toggle="#auth-tabs-content" data-tabs-active-classes="border-emerald-600 text-emerald-700 dark:text-emerald-300" data-tabs-inactive-classes="border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400" role="tablist">
                     <li class="me-2" role="presentation">
@@ -230,6 +237,21 @@
                         <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rDesc">Description</label>
                         <textarea id="rDesc" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" rows="4" placeholder="Describe the issue..."></textarea>
                     </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="rWasteType">Waste type (optional)</label>
+                        <select id="rWasteType" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                            <option value="auto" selected>Auto-detect (AI)</option>
+                            <option value="plastic">Plastic</option>
+                            <option value="paper">Paper / Cardboard</option>
+                            <option value="glass">Glass</option>
+                            <option value="metal">Metal</option>
+                            <option value="organic">Organic / Food</option>
+                            <option value="e-waste">E-Waste / Batteries</option>
+                            <option value="styrofoam">Styrofoam / Foam</option>
+                            <option value="general">General / Mixed</option>
+                        </select>
+                        <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Choose if AI gets it wrong.</p>
+                    </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -267,6 +289,20 @@
 
         <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h3 class="text-lg font-semibold">Pending sync</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Saved offline. Will sync automatically when online.</p>
+                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Last sync: <span id="lastSyncUser">never</span></p>
+                </div>
+                <button id="syncNowBtn" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="UI.syncNow()">
+                    <i class="ri-refresh-line"></i>Sync now
+                </button>
+            </div>
+            <div id="pendingSync" class="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-lg font-semibold">My reports</h3>
                 <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshUserTable()">
                     <i class="ri-refresh-line"></i>Refresh
@@ -290,10 +326,18 @@
 
         <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-lg font-semibold">Assigned tasks</h3>
-                <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshVendorTable()">
-                    <i class="ri-refresh-line"></i>Refresh
-                </button>
+                <div>
+                    <h3 class="text-lg font-semibold">Assigned tasks</h3>
+                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Last sync: <span id="lastSyncVendor">never</span></p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshVendorTable()">
+                        <i class="ri-refresh-line"></i>Refresh
+                    </button>
+                    <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="UI.syncNow()">
+                        <i class="ri-refresh-line"></i>Sync now
+                    </button>
+                </div>
             </div>
             <div id="vendorTasks" class="mt-4 overflow-x-hidden rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
 
@@ -341,11 +385,17 @@
                     <input id="aSearch" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Search title or description" oninput="Reports.refreshAdminTable()"/>
                 </div>
                 <div class="flex items-end">
-                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshAdminTable()">
-                        <i class="ri-refresh-line"></i>Refresh
-                    </button>
+                    <div class="flex w-full flex-col gap-2">
+                        <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshAdminTable()">
+                            <i class="ri-refresh-line"></i>Refresh
+                        </button>
+                        <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="UI.syncNow()">
+                            <i class="ri-refresh-line"></i>Sync now
+                        </button>
+                    </div>
                 </div>
             </div>
+            <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Last sync: <span id="lastSyncAdmin">never</span></div>
 
             <div id="adminReports" class="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
 
@@ -431,7 +481,7 @@
     <!-- Report Detail Modal -->
     <div id="reportModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target === this) UI.closeReportModal()">
         <div class="w-full max-w-4xl">
-            <div id="reportModalCard" class="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-xl opacity-0 scale-95 transition duration-200 dark:border-slate-800 dark:bg-slate-900">
+            <div id="reportModalCard" class="relative max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl opacity-0 scale-95 transition duration-200 dark:border-slate-800 dark:bg-slate-900">
                 <div class="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
                     <div>
                         <h3 id="reportModalTitle" class="text-lg font-semibold">Report</h3>
@@ -452,10 +502,16 @@
                             <div id="reportModalStatus" class="mt-1"></div>
                         </div>
                         <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Assignment</div>
+                            <div id="reportModalAssigned" class="mt-1 text-sm text-slate-700 dark:text-slate-200"></div>
+                            <div id="reportModalAssignSource" class="mt-1 text-xs text-slate-500 dark:text-slate-400"></div>
+                        </div>
+                        <div>
                             <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Detected Waste</div>
                             <div id="reportModalWaste" class="mt-1 text-sm text-slate-700 dark:text-slate-200"></div>
                             <div id="reportModalAuto" class="mt-2"></div>
                         </div>
+                        <div id="reportModalRoleHint" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"></div>
                         <div>
                             <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Location</div>
                             <div id="reportModalLocation" class="mt-1 text-sm text-slate-700 dark:text-slate-200"></div>
@@ -474,6 +530,10 @@
                         <div>
                             <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Proof</div>
                             <div id="reportModalProof" class="mt-2"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Audit trail</div>
+                            <div id="reportModalEvents" class="mt-2 space-y-2 text-xs text-slate-600 dark:text-slate-300"></div>
                         </div>
                     </div>
                 </div>
