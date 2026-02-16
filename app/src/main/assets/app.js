@@ -75,6 +75,55 @@ const Store = {
   }
 };
 
+/* ---------------- Lightweight cache + offline helpers ---------------- */
+const Cache = {
+  get(key, maxAgeMs = 10 * 60 * 1000) {
+    const rec = Store.get(`cache:${key}`, null);
+    if (!rec || typeof rec !== "object") return null;
+    if (rec.t && (Date.now() - rec.t) > maxAgeMs) return null;
+    return rec.v;
+  },
+  set(key, val) {
+    Store.set(`cache:${key}`, { t: Date.now(), v: val });
+  }
+};
+
+function isNetworkError(err) {
+  if (!navigator.onLine) return true;
+  const msg = String(err?.message || "");
+  return err?.name === "TypeError" || /failed to fetch|networkerror|load failed|network/i.test(msg);
+}
+
+let _lastOfflineNotice = 0;
+function notifyOffline(message) {
+  const nowTs = Date.now();
+  if (nowTs - _lastOfflineNotice < 15000) return;
+  _lastOfflineNotice = nowTs;
+  toast(message);
+}
+
+function setLastSync(ts = now()) {
+  Store.set("lastSyncAt", ts);
+  try { UI?.renderSyncMeta?.(); } catch (_) {}
+}
+
+function updateNetStatus() {
+  const el = document.getElementById("netStatus");
+  if (!el) return;
+  const pending = OfflineQueue?.count?.() || 0;
+  if (!navigator.onLine) {
+    el.textContent = pending ? `Offline (${pending} pending)` : "Offline";
+    el.classList.remove("hidden");
+    return;
+  }
+  if (pending > 0) {
+    el.textContent = `Syncing (${pending})`;
+    el.classList.remove("hidden");
+    return;
+  }
+  el.classList.add("hidden");
+}
+
 /* ---------------- API base + helpers ---------------- */
 const API_BASE = "https://civicsweep-api.onrender.com";
 let JWT = Store.get("jwt", null);
@@ -85,23 +134,172 @@ function setJWT(token) {
   else Store.remove("jwt");
 }
 
-async function api(path, method = "GET", body) {
+function decodeJwtPayload(token) {
+  try {
+    const parts = String(token || "").split(".");
+    if (parts.length < 2) return null;
+    let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+    const json = atob(b64 + pad);
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function isJwtExpired(token, skewSeconds = 60) {
+  const p = decodeJwtPayload(token);
+  if (!p || !p.exp) return true;
+  const nowSec = Math.floor(Date.now() / 1000);
+  return (p.exp - skewSeconds) <= nowSec;
+}
+
+function getOfflineAccounts() {
+  return Store.get("offlineAccounts", []);
+}
+
+function setOfflineAccounts(list) {
+  Store.set("offlineAccounts", list || []);
+}
+
+function accountKey(role, loginId) {
+  return `${String(role || "").toLowerCase()}:${String(loginId || "").toLowerCase()}`;
+}
+
+function rememberSession(session, token, identifier) {
+  if (!session || !token) return;
+  Store.set("lastSession", session);
+  Store.set("lastJwt", token);
+  if (identifier) Store.set("lastLoginId", String(identifier).trim().toLowerCase());
+  Store.set("lastLoginAt", now());
+
+  const role = String(session.role || "").toLowerCase();
+  const loginId = String(identifier || session.adminEmail || session.vendorId || session.userId || "").trim().toLowerCase();
+  if (!role || !loginId) return;
+  const list = getOfflineAccounts();
+  const key = accountKey(role, loginId);
+  const next = list.filter(a => a.key !== key);
+  next.unshift({
+    key,
+    role,
+    loginId,
+    name: session.name || "",
+    session,
+    token,
+    lastLoginAt: now()
+  });
+  setOfflineAccounts(next.slice(0, 5));
+}
+
+function getOfflineCandidate(key) {
+  const list = getOfflineAccounts();
+  let item = null;
+  if (key) {
+    item = list.find(a => a.key === key) || null;
+  }
+  if (!item) {
+    const lastSession = Store.get("lastSession", null);
+    const lastJwt = Store.get("lastJwt", null);
+    const lastLoginId = Store.get("lastLoginId", null);
+    if (lastSession && lastJwt) {
+      const role = String(lastSession.role || "").toLowerCase();
+      const loginId = String(lastLoginId || lastSession.adminEmail || lastSession.vendorId || lastSession.userId || "").trim().toLowerCase();
+      if (role && loginId) {
+        item = {
+          key: accountKey(role, loginId),
+          role,
+          loginId,
+          name: lastSession.name || "",
+          session: lastSession,
+          token: lastJwt,
+          lastLoginAt: Store.get("lastLoginAt", null) || now()
+        };
+      }
+    }
+  }
+
+  if (!item) return { ok: false, reason: "none" };
+  if (isJwtExpired(item.token)) return { ok: false, reason: "expired" };
+  const p = decodeJwtPayload(item.token);
+  if (p?.role && item.session?.role) {
+    const tokenRole = String(p.role).toLowerCase();
+    const sessionRole = String(item.session.role).toLowerCase();
+    if (tokenRole !== sessionRole) return { ok: false, reason: "mismatch" };
+  }
+  return { ok: true, item };
+}
+
+function findOfflineAccount(role, loginId) {
+  const r = String(role || "").toLowerCase();
+  const id = String(loginId || "").trim().toLowerCase();
+  if (!r || !id) return { ok: false, reason: "missing" };
+  const list = getOfflineAccounts();
+  let item = list.find(a => a.role === r && a.loginId === id) || null;
+  if (!item) {
+    // legacy fallback
+    const legacySession = Store.get("lastSession", null);
+    const legacyJwt = Store.get("lastJwt", null);
+    const legacyId = Store.get("lastLoginId", null);
+    const legacyRole = String(legacySession?.role || "").toLowerCase();
+    const legacyLogin = String(legacyId || "").trim().toLowerCase();
+    if (legacySession && legacyJwt && legacyRole === r && legacyLogin === id) {
+      item = {
+        key: accountKey(r, id),
+        role: r,
+        loginId: id,
+        name: legacySession.name || "",
+        session: legacySession,
+        token: legacyJwt,
+        lastLoginAt: Store.get("lastLoginAt", null) || now()
+      };
+    }
+  }
+  if (!item) return { ok: false, reason: "not_found" };
+  if (isJwtExpired(item.token)) return { ok: false, reason: "expired" };
+  return { ok: true, item };
+}
+
+async function api(path, method = "GET", body, options = {}) {
+  api.lastFromCache = false;
+  const cacheKey = options.cacheKey || null;
+  const cacheMaxAgeMs = options.cacheMaxAgeMs || (10 * 60 * 1000);
+
+  if (method === "GET" && cacheKey && !navigator.onLine) {
+    const cached = Cache.get(cacheKey, cacheMaxAgeMs);
+    if (cached != null) {
+      api.lastFromCache = true;
+      return cached;
+    }
+  }
+
   const baseUrl = `${API_BASE}${path}`;
   const url = method === "GET"
     ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}t=${Date.now()}`
     : baseUrl;
   try { UI?.fx?.progressStart?.(); } catch(_){}
-  const res = await fetch(url, {
-    method,
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache",
-      ...(JWT ? { Authorization: `Bearer ${JWT}` } : {})
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
+  let res;
+  try {
+    res = await fetch(url, {
+      method,
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        ...(JWT ? { Authorization: `Bearer ${JWT}` } : {})
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (err) {
+    if (method === "GET" && cacheKey && isNetworkError(err)) {
+      const cached = Cache.get(cacheKey, cacheMaxAgeMs);
+      if (cached != null) {
+        api.lastFromCache = true;
+        return cached;
+      }
+    }
+    throw err;
+  }
   try { UI?.fx?.progressStop?.(); } catch(_){}
   let data = null;
   try {
@@ -112,6 +310,9 @@ async function api(path, method = "GET", body) {
     nativeLog(`API ${method} ${path} -> ${res.status} ${msg}`);
     throw new Error(msg);
   }
+  if (navigator.onLine) setLastSync();
+  if (method === "GET" && cacheKey) Cache.set(cacheKey, data);
+  api.lastFromCache = false;
   return data;
 }
 
@@ -155,6 +356,144 @@ function oops(e) {
   }
   alert(msg);
 }
+
+/* ---------------- Offline queue + sync ---------------- */
+const OfflineQueue = {
+  key: "offlineQueue",
+  list: Store.get("offlineQueue", []),
+  _flushing: false,
+  _retryCount: 0,
+  _nextRetryAt: null,
+  _timer: null,
+  save() {
+    Store.set(this.key, this.list);
+    updateNetStatus();
+    try { UI?.renderPendingSync?.(); } catch (_) {}
+  },
+  count() { return this.list.length; },
+  enqueue(item) {
+    const entry = {
+      id: item.id || `q_${Date.now()}_${uid()}`,
+      type: item.type,
+      payload: item.payload || {},
+      createdAt: item.createdAt || now()
+    };
+    this.list.push(entry);
+    this.save();
+    if (navigator.onLine) this.scheduleFlush();
+    return entry;
+  },
+  enqueueReport(payload) {
+    const entry = this.enqueue({ type: "report.create", payload });
+    return this.toReportStub(entry);
+  },
+  enqueueAction(type, payload) {
+    return this.enqueue({ type, payload });
+  },
+  pendingReports() {
+    return this.list.filter(i => i.type === "report.create");
+  },
+  retryInMs() {
+    if (!this._nextRetryAt) return 0;
+    return Math.max(0, this._nextRetryAt - Date.now());
+  },
+  scheduleFlush() {
+    if (this._timer || !this.list.length) return;
+    const base = 2000;
+    const delay = Math.min(60000, base * Math.pow(2, this._retryCount));
+    const jitter = Math.floor(Math.random() * 400);
+    const ms = delay + jitter;
+    this._nextRetryAt = Date.now() + ms;
+    this._timer = setTimeout(() => {
+      this._timer = null;
+      this.flush();
+    }, ms);
+    try { UI?.renderPendingSync?.(); } catch (_) {}
+  },
+  clearSchedule() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+    this._nextRetryAt = null;
+  },
+  toReportStub(item) {
+    const p = item.payload || {};
+    const localId = item.id || `local_${uid()}`;
+    return {
+      id: localId,
+      title: p.title || "Untitled report",
+      desc: p.desc || "",
+      lat: p.lat,
+      lng: p.lng,
+      address: p.address || "",
+      photoBase64: p.photoBase64 || null,
+      wasteType: (p.wasteTypeOverride && p.wasteTypeOverride !== "auto") ? p.wasteTypeOverride : null,
+      wasteConfidence: null,
+      status: "QUEUED",
+      autoAssigned: false,
+      autoAssignNote: "Queued offline. Will sync when online.",
+      createdAt: item.createdAt,
+      updatedAt: item.createdAt,
+      offline: true
+    };
+  },
+  async flush(force = false) {
+    if (this._flushing) return;
+    if (force) {
+      this._retryCount = 0;
+      this.clearSchedule();
+    }
+    if (!navigator.onLine) {
+      if (force) notifyOffline("Offline. Sync will retry automatically.");
+      this.scheduleFlush();
+      return;
+    }
+    if (!this.list.length) { updateNetStatus(); return; }
+    this._flushing = true;
+    updateNetStatus();
+    let remaining = [];
+    let failedNet = false;
+    for (let i = 0; i < this.list.length; i++) {
+      const item = this.list[i];
+      try {
+        if (item.type === "report.create") {
+          await api("/reports", "POST", item.payload);
+        } else if (item.type === "vendor.complete") {
+          await api("/reports/vendor/complete", "POST", item.payload);
+        } else if (item.type === "admin.assign") {
+          await api("/reports/assign", "POST", item.payload);
+        } else if (item.type === "admin.status") {
+          await api("/reports/status", "POST", item.payload);
+        }
+      } catch (e) {
+        remaining = this.list.slice(i);
+        const isNet = isNetworkError(e);
+        failedNet = isNet;
+        if (!isNet) remaining[0] = { ...item, error: e?.message || "Failed", failedAt: now() };
+        break;
+      }
+    }
+    this.list = remaining;
+    this.save();
+    this._flushing = false;
+    updateNetStatus();
+    if (!this.list.length) {
+      this._retryCount = 0;
+      this.clearSchedule();
+      toast("Offline changes synced");
+      if (Session?.data?.role) {
+        await UI.route();
+      }
+      return;
+    }
+    // still pending
+    if (navigator.onLine && failedNet) {
+      this._retryCount = Math.min(this._retryCount + 1, 6);
+      this.scheduleFlush();
+    }
+  }
+};
 
 /* ---------------- Reverse Geocoding (Nominatim) ---------------- */
 // Cache: { "12.97160,77.59460": "Some address" }
@@ -229,11 +568,15 @@ const Session = {
   save() { Store.set("session", this.data); UI.sync(); UI.route(); },
   clear() { this.data = null; Store.remove("session"); setJWT(null); UI.sync(); UI.route(); }
 };
+if (Session.data && JWT && !isJwtExpired(JWT)) {
+  rememberSession(Session.data, JWT);
+}
 
 /* ---------------- Auth (Render API) ---------------- */
 const Auth = {
   async userSignup() {
     try {
+      if (!navigator.onLine) return toast("Offline. Sign up requires internet.");
       const name = $("#uName").value.trim();
       const email = $("#uEmail").value.trim();
       const pass = $("#uPass").value.trim();
@@ -245,31 +588,64 @@ const Auth = {
   },
   async userLogin() {
     try {
+      if (!navigator.onLine) {
+        const email = $("#uLoginEmail").value.trim();
+        if (!email) return toast("Enter your email");
+        const cand = findOfflineAccount("user", email);
+        if (!cand.ok) return toast("Offline login not available for this account.");
+        setJWT(cand.item.token);
+        Session.data = cand.item.session;
+        Session.save();
+        return toast("Offline login successful");
+      }
       const email = $("#uLoginEmail").value.trim();
       const pass = $("#uLoginPass").value.trim();
       const r = await api("/auth/user/login", "POST", { email, password: pass });
       setJWT(r.token);
       Session.data = { role: "user", userId: r.userId, name: r.name };
+      rememberSession(Session.data, r.token, email);
       Session.save();
     } catch (e) { oops(e); }
   },
   async vendorLogin() {
     try {
+      if (!navigator.onLine) {
+        const id = $("#vId").value.trim();
+        if (!id) return toast("Enter your vendor ID");
+        const cand = findOfflineAccount("vendor", id);
+        if (!cand.ok) return toast("Offline login not available for this account.");
+        setJWT(cand.item.token);
+        Session.data = cand.item.session;
+        Session.save();
+        return toast("Offline login successful");
+      }
       const id = $("#vId").value.trim();
       const pass = $("#vPass").value.trim();
       const r = await api("/auth/vendor/login", "POST", { code: id, password: pass });
       setJWT(r.token);
       Session.data = { role: "vendor", vendorId: r.vendorId, name: r.name };
+      rememberSession(Session.data, r.token, id);
       Session.save();
     } catch (e) { oops(e); }
   },
   async adminLogin() {
     try {
+      if (!navigator.onLine) {
+        const email = $("#aEmail").value.trim();
+        if (!email) return toast("Enter your admin email");
+        const cand = findOfflineAccount("admin", email);
+        if (!cand.ok) return toast("Offline login not available for this account.");
+        setJWT(cand.item.token);
+        Session.data = cand.item.session;
+        Session.save();
+        return toast("Offline login successful");
+      }
       const email = $("#aEmail").value.trim();
       const pass = $("#aPass").value.trim();
       const r = await api("/auth/admin/login", "POST", { email, password: pass });
       setJWT(r.token);
       Session.data = { role: "admin", adminEmail: r.adminEmail, name: r.name };
+      rememberSession(Session.data, r.token, email);
       Session.save();
     } catch (e) { oops(e); }
   },
@@ -282,9 +658,10 @@ const Vendors = {
   async refresh() {
     try {
       // Expecting backend to expose: GET /vendors -> [{id, name}]
-      const rows = await api("/vendors");
+      const rows = await api("/vendors", "GET", null, { cacheKey: "vendors", cacheMaxAgeMs: 60 * 60 * 1000 });
       this.cache = rows || [];
       Store.set("vendors_cache", this.cache);
+      if (api.lastFromCache) notifyOffline("Offline. Using last saved vendor list.");
     } catch (e) {
       // Fallback to cached list if API is not present
       this.cache = Store.get("vendors_cache", this.cache || []);
@@ -344,22 +721,45 @@ const Reports = {
       const title = $("#rTitle").value.trim();
       if (!title) return toast("Add a title");
       const desc = $("#rDesc").value.trim();
+      const wasteTypeOverride = $("#rWasteType")?.value || "auto";
       const lat = parseFloat($("#rLat").value);
       const lng = parseFloat($("#rLng").value);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return toast("Set location (use map or GPS)");
       const f = $("#rPhoto").files?.[0];
 
-      // compress before sending
+      // compress before sending (higher quality for AI detection accuracy)
       let photoBase64 = null;
       if (f) {
-        photoBase64 = await compressImage(f, 1280, 1280, 0.7);
+        photoBase64 = await compressImage(f, 1600, 1600, 0.85);
       }
 
-      const created = await api("/reports", "POST", { title, desc, lat, lng, photoBase64, address: (window.__geoAddr || null) });
-      nativeLog(`Submit report: ok ${created?.id ? `id=${created.id}` : ""}`.trim());
-      toast("Report submitted");
+      const payload = { title, desc, lat, lng, photoBase64, address: (window.__geoAddr || null), wasteTypeOverride };
+      if (!navigator.onLine) {
+        const stub = OfflineQueue.enqueueReport(payload);
+        this._userRows = [stub, ...(this._userRows || [])];
+        this._userLimit = this._userStep;
+        UI.renderTable("#userReports", this._userRows);
+        toast("Offline. Report saved and will sync automatically.");
+      } else {
+        try {
+          const created = await api("/reports", "POST", payload);
+          nativeLog(`Submit report: ok ${created?.id ? `id=${created.id}` : ""}`.trim());
+          toast("Report submitted");
+        } catch (e) {
+          if (isNetworkError(e)) {
+            const stub = OfflineQueue.enqueueReport(payload);
+            this._userRows = [stub, ...(this._userRows || [])];
+            this._userLimit = this._userStep;
+            UI.renderTable("#userReports", this._userRows);
+            toast("Network issue. Report queued for sync.");
+          } else {
+            throw e;
+          }
+        }
+      }
 
       ["#rTitle", "#rDesc", "#rLat", "#rLng"].forEach(sel => $(sel).value = "");
+      if ($("#rWasteType")) $("#rWasteType").value = "auto";
       $("#rPhoto").value = ""; $("#rPreview").classList.add("hidden");
       this.refreshUserTable();
     } catch (e) { oops(e); }
@@ -368,24 +768,44 @@ const Reports = {
     try {
       const s = Session.data; if (!s || s.role !== "user") return;
       UI.fx?.skeletonStart?.('#userReports');
-      const reports = await api("/reports/me");
-      this._userRows = reports || [];
+      const reports = await api("/reports/me", "GET", null, { cacheKey: "reports.me", cacheMaxAgeMs: 5 * 60 * 1000 });
+      if (api.lastFromCache) notifyOffline("Offline. Showing last saved reports.");
+      const queued = OfflineQueue.pendingReports().map(i => OfflineQueue.toReportStub(i));
+      this._userRows = [...queued, ...(reports || [])];
       this._userLimit = this._userStep;
       UI.renderTable("#userReports", this._userRows);
       UI.fx?.initTooltips?.('#userReports');
       UI.fx?.revealRows?.('#userReports');
-    } catch (e) { oops(e); }
+    } catch (e) {
+      if (isNetworkError(e)) {
+        const queued = OfflineQueue.pendingReports().map(i => OfflineQueue.toReportStub(i));
+        this._userRows = queued;
+        this._userLimit = this._userStep;
+        UI.renderTable("#userReports", this._userRows);
+        notifyOffline("Offline. No cached reports yet.");
+      } else {
+        oops(e);
+      }
+    }
     finally { UI.fx?.skeletonStop?.('#userReports'); }
   },
   async refreshVendorTable() {
     try {
       const s = Session.data; if (!s || s.role !== "vendor") return;
       UI.fx?.skeletonStart?.('#vendorTasks');
-      const reports = await api("/reports/vendor");
+      const reports = await api("/reports/vendor", "GET", null, { cacheKey: "reports.vendor", cacheMaxAgeMs: 5 * 60 * 1000 });
+      if (api.lastFromCache) notifyOffline("Offline. Showing last saved tasks.");
       UI.renderTable("#vendorTasks", (reports || []));
       UI.fx?.initTooltips?.('#vendorTasks');
       UI.fx?.revealRows?.('#vendorTasks');
-    } catch (e) { oops(e); }
+    } catch (e) {
+      if (isNetworkError(e)) {
+        UI.renderTable("#vendorTasks", []);
+        notifyOffline("Offline. No cached vendor tasks yet.");
+      } else {
+        oops(e);
+      }
+    }
     finally { UI.fx?.skeletonStop?.('#vendorTasks'); }
   },
   async refreshAdminTable() {
@@ -395,7 +815,9 @@ const Reports = {
       const filter = $("#aFilter").value || "all";
       const q = ($("#aSearch").value || "");
       UI.fx?.skeletonStart?.('#adminReports');
-      const reports = await api(`/reports?status=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`);
+      const cacheKey = `reports.admin.${filter}.${q || "all"}`;
+      const reports = await api(`/reports?status=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`, "GET", null, { cacheKey, cacheMaxAgeMs: 5 * 60 * 1000 });
+      if (api.lastFromCache) notifyOffline("Offline. Showing last saved admin view.");
       this._adminRows = reports || [];
       this._adminLimit = this._adminStep;
       UI.renderTable("#adminReports", this._adminRows);
@@ -403,13 +825,26 @@ const Reports = {
       UI.fx?.revealRows?.('#adminReports');
       // Ensure vendor dropdown is up to date
       await Vendors.refresh();
-    } catch (e) { oops(e); }
+    } catch (e) {
+      if (isNetworkError(e)) {
+        UI.renderTable("#adminReports", []);
+        notifyOffline("Offline. No cached admin data yet.");
+      } else {
+        oops(e);
+      }
+    }
     finally { UI.fx?.skeletonStop?.('#adminReports'); }
   },
   async assign() {
     try {
       const id = $("#aReportId").value.trim(), vendorId = $("#aVendor").value;
       if (!id || !vendorId) return toast("Enter Report ID and select a vendor");
+      if (!navigator.onLine) {
+        OfflineQueue.enqueueAction("admin.assign", { reportId: id, vendorId });
+        toast("Offline. Assignment queued.");
+        updateNetStatus();
+        return;
+      }
       await api("/reports/assign", "POST", { reportId: id, vendorId });
       toast("Assigned");
       this.refreshAdminTable();
@@ -419,6 +854,12 @@ const Reports = {
     try {
       const id = $("#aStatusId").value.trim(), st = $("#aStatusVal").value;
       if (!id || !st) return toast("Enter Report ID and select a status");
+      if (!navigator.onLine) {
+        OfflineQueue.enqueueAction("admin.status", { reportId: id, status: st });
+        toast("Offline. Status update queued.");
+        updateNetStatus();
+        return;
+      }
       await api("/reports/status", "POST", { reportId: id, status: st });
       toast("Status updated");
       this.refreshAdminTable(); this.refreshUserTable(); this.refreshVendorTable();
@@ -433,6 +874,13 @@ const Reports = {
       // compress vendor proof too
       const proofBase64 = await compressImage(file, 1280, 1280, 0.7);
 
+      if (!navigator.onLine) {
+        OfflineQueue.enqueueAction("vendor.complete", { reportId: id, proofBase64 });
+        toast("Offline. Completion queued.");
+        updateNetStatus();
+        $("#vProof").value = ""; $("#vReportId").value = "";
+        return;
+      }
       await api("/reports/vendor/complete", "POST", { reportId: id, proofBase64 });
       toast("Completed");
       $("#vProof").value = ""; $("#vReportId").value = "";
@@ -522,8 +970,121 @@ const UI = {
     $("#whoami").textContent = s ? `${s.role.toUpperCase()} - ${s.name || s.vendorId || s.adminEmail}` : "Not signed in";
   },
 
+  renderPendingSync() {
+    const wrap = $("#pendingSync");
+    if (!wrap) return;
+    const btn = $("#syncNowBtn");
+    const pending = OfflineQueue.pendingReports();
+    wrap.textContent = "";
+
+    if (btn) {
+      btn.disabled = pending.length === 0;
+    }
+
+    if (!pending.length) {
+      const p = document.createElement("p");
+      p.className = "text-sm text-slate-500 dark:text-slate-400";
+      p.textContent = "No pending uploads.";
+      wrap.appendChild(p);
+      return;
+    }
+
+    const info = document.createElement("div");
+    info.className = "text-xs text-slate-500 dark:text-slate-400";
+    const retryMs = OfflineQueue.retryInMs();
+    const retryText = retryMs > 0 ? `Next retry in ${Math.ceil(retryMs / 1000)}s.` : "Sync will retry automatically.";
+    info.textContent = navigator.onLine ? retryText : "Offline. Will sync when you’re online.";
+    wrap.appendChild(info);
+
+    pending.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300";
+
+      const left = document.createElement("div");
+      left.className = "min-w-0";
+      const title = document.createElement("div");
+      title.className = "font-semibold text-slate-800 dark:text-slate-100";
+      title.textContent = item.payload?.title || "Untitled report";
+      const meta = document.createElement("div");
+      meta.className = "text-[11px] text-slate-500 dark:text-slate-400";
+      const d = item.createdAt ? new Date(item.createdAt) : null;
+      meta.textContent = d && !Number.isNaN(d.getTime()) ? d.toLocaleString() : "";
+      left.appendChild(title);
+      left.appendChild(meta);
+
+      const right = document.createElement("div");
+      right.className = "inline-flex items-center gap-2";
+      const chip = document.createElement("span");
+      chip.className = "inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200";
+      chip.textContent = "QUEUED";
+      right.appendChild(chip);
+
+      if (item.error) {
+        const err = document.createElement("span");
+        err.className = "text-[10px] text-rose-600 dark:text-rose-300";
+        err.textContent = `Error: ${item.error}`;
+        right.appendChild(err);
+      }
+
+      row.appendChild(left);
+      row.appendChild(right);
+      wrap.appendChild(row);
+    });
+  },
+
+  renderSyncMeta() {
+    const raw = Store.get("lastSyncAt", null);
+    const ts = raw ? new Date(raw) : null;
+    const text = ts && !Number.isNaN(ts.getTime()) ? ts.toLocaleString() : "never";
+    const ids = ["lastSyncUser", "lastSyncVendor", "lastSyncAdmin"];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    });
+  },
+
+  renderOfflineResume() {
+    const wrap = $("#offlineResume");
+    if (!wrap) return;
+    if (Session.data) {
+      wrap.classList.add("hidden");
+      return;
+    }
+    if (navigator.onLine) {
+      wrap.classList.add("hidden");
+      return;
+    }
+
+    wrap.classList.remove("hidden");
+  },
+
+  clearOfflineSession() {
+    Store.remove("offlineAccounts");
+    Store.remove("lastSession");
+    Store.remove("lastJwt");
+    Store.remove("lastLoginAt");
+    Store.remove("lastLoginId");
+    this.renderOfflineResume();
+    toast("Saved offline session cleared");
+  },
+
+  async syncNow() {
+    await OfflineQueue.flush(true);
+    if (!navigator.onLine) return;
+    const role = Session?.data?.role || "";
+    if (role === "user") await Reports.refreshUserTable();
+    if (role === "vendor") await Reports.refreshVendorTable();
+    if (role === "admin") await Reports.refreshAdminTable();
+  },
+
   async route() {
     const s = Session.data;
+    if (s && (!JWT || isJwtExpired(JWT))) {
+      Session.clear();
+      toast("Session expired. Please login online.");
+      return;
+    }
+    this.renderSyncMeta();
     document.documentElement.classList.toggle('no-x-scroll', s?.role === "vendor");
     document.body.classList.toggle('no-x-scroll', s?.role === "vendor");
     const scrs = ["#authSection", "#userDash", "#vendorDash", "#adminDash"];
@@ -534,8 +1095,14 @@ const UI = {
       else this.hideScreen(el);
     });
 
-    if (!s) return;
-    if (s.role === "user") await Reports.refreshUserTable();
+    if (!s) {
+      this.renderOfflineResume();
+      return;
+    }
+    if (s.role === "user") {
+      UI.renderPendingSync();
+      await Reports.refreshUserTable();
+    }
     if (s.role === "vendor") await Reports.refreshVendorTable();
     if (s.role === "admin") {
       await Vendors.refresh(); // keep vendor list in sync for assignment
@@ -619,7 +1186,8 @@ const UI = {
         "new": "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
         "assigned": "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200",
         "in_progress": "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-200",
-        "resolved": "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+        "resolved": "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200",
+        "queued": "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200"
       };
       return map[k] || map.new;
     };
@@ -985,6 +1553,7 @@ const UI = {
     if (!modal || !card) return;
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("overflow-hidden");
     requestAnimationFrame(() => {
       modal.classList.remove("opacity-0");
       modal.classList.add("opacity-100");
@@ -1100,12 +1669,16 @@ const UI = {
     const status = $("#reportModalStatus");
     const waste = $("#reportModalWaste");
     const auto = $("#reportModalAuto");
+    const assigned = $("#reportModalAssigned");
+    const assignSource = $("#reportModalAssignSource");
+    const roleHint = $("#reportModalRoleHint");
     const loc = $("#reportModalLocation");
     const addr = $("#reportModalAddress");
     const created = $("#reportModalCreated");
     const updated = $("#reportModalUpdated");
     const photo = $("#reportModalPhoto");
     const proof = $("#reportModalProof");
+    const events = $("#reportModalEvents");
 
     if (title) title.textContent = r.title || "Report";
     if (meta) meta.textContent = `ID: ${r.id || "-"}`;
@@ -1123,11 +1696,29 @@ const UI = {
         "new": "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
         "assigned": "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200",
         "in_progress": "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-200",
-        "resolved": "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+        "resolved": "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200",
+        "queued": "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200"
       };
       chip.className = `inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${map[k] || map.new}`;
       chip.textContent = r.status || "NEW";
       status.appendChild(chip);
+    }
+
+    if (assigned) {
+      const vendorId = r.assignedVendorId || r.vendorId || "";
+      const vendorName = (window.Vendors && Vendors.cache || []).find(v => v.id === vendorId)?.name;
+      const vendorType = (window.Vendors && Vendors.cache || []).find(v => v.id === vendorId)?.wasteType;
+      if (vendorId) {
+        const tag = vendorType ? ` (${vendorType})` : "";
+        assigned.textContent = vendorName ? `${vendorName}${tag}` : `Vendor ID: ${vendorId}`;
+      } else {
+        assigned.textContent = "Not assigned yet";
+      }
+    }
+
+    if (assignSource) {
+      const src = r.autoAssigned ? "Auto-assigned (AI)" : "Manual / Admin";
+      assignSource.textContent = src;
     }
 
     if (waste) {
@@ -1145,6 +1736,19 @@ const UI = {
       if (r.autoAssignNote) {
         auto.textContent = r.autoAssignNote;
         auto.className = "mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
+      }
+    }
+
+    if (roleHint) {
+      const role = Session?.data?.role || "";
+      if (role === "user") {
+        roleHint.textContent = "You will see status updates here. If it stays NEW, it is waiting for admin assignment.";
+      } else if (role === "vendor") {
+        roleHint.textContent = "Complete the task and upload proof once finished. Status will update to RESOLVED.";
+      } else if (role === "admin") {
+        roleHint.textContent = "You can reassign the vendor or update status anytime from the admin dashboard.";
+      } else {
+        roleHint.textContent = "";
       }
     }
 
@@ -1190,14 +1794,73 @@ const UI = {
       }
     }
 
+    if (events) {
+      events.textContent = "Loading audit trail...";
+      UI.loadReportEvents(r);
+    }
+
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("overflow-hidden");
     requestAnimationFrame(() => {
       modal.classList.remove("opacity-0");
       modal.classList.add("opacity-100");
       card.classList.remove("opacity-0", "scale-95");
       card.classList.add("opacity-100", "scale-100");
     });
+  },
+
+  async loadReportEvents(report) {
+    const el = $("#reportModalEvents");
+    if (!el) return;
+    const reportId = typeof report === "string" ? report : report?.id;
+    const status = (typeof report === "object" ? report?.status : "") || "";
+    if (!reportId || String(reportId).startsWith("q_") || String(reportId).startsWith("local_") || status.toLowerCase() === "queued") {
+      el.textContent = "Audit trail will appear after this report syncs online.";
+      return;
+    }
+    el.textContent = "Loading audit trail...";
+    try {
+      const events = await api(`/reports/${encodeURIComponent(reportId)}/events`, "GET", null, {
+        cacheKey: `report.events.${reportId}`,
+        cacheMaxAgeMs: 5 * 60 * 1000
+      });
+      if (api.lastFromCache) notifyOffline("Offline. Showing cached audit trail.");
+      el.textContent = "";
+      if (!events || !events.length) {
+        el.textContent = "No audit events yet.";
+        return;
+      }
+      events.forEach(ev => {
+        const row = document.createElement("div");
+        row.className = "flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950";
+
+        const dot = document.createElement("span");
+        dot.className = "mt-1 h-2 w-2 rounded-full bg-emerald-500/80 flex-shrink-0";
+
+        const body = document.createElement("div");
+        body.className = "min-w-0";
+
+        const title = document.createElement("div");
+        title.className = "text-xs font-semibold text-slate-700 dark:text-slate-200";
+        title.textContent = ev.message || ev.type || "Event";
+
+        const meta = document.createElement("div");
+        meta.className = "text-[11px] text-slate-500 dark:text-slate-400";
+        const when = ev.createdAt ? new Date(ev.createdAt) : null;
+        const whenText = when && !Number.isNaN(when.getTime()) ? when.toLocaleString() : "";
+        const actor = ev.actorRole ? `${ev.actorRole}${ev.actorId ? `:${ev.actorId}` : ""}` : "";
+        meta.textContent = [whenText, actor].filter(Boolean).join(" | ");
+
+        body.appendChild(title);
+        body.appendChild(meta);
+        row.appendChild(dot);
+        row.appendChild(body);
+        el.appendChild(row);
+      });
+    } catch (e) {
+      el.textContent = navigator.onLine ? "Failed to load audit trail." : "Offline. Audit trail unavailable.";
+    }
   },
 
   closeReportModal() {
@@ -1209,13 +1872,37 @@ const UI = {
     modal.classList.remove("opacity-100");
     modal.classList.add("opacity-0");
     modal.setAttribute("aria-hidden", "true");
-    setTimeout(() => modal.classList.add("hidden"), 200);
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }, 200);
   }
 };
 
 // Map zoom controls (optional)
 UI.zoomInMap = function(){ try{ UI._map?.zoomIn?.(); }catch(_){} };
 UI.zoomOutMap = function(){ try{ UI._map?.zoomOut?.(); }catch(_){} };
+
+/* Network status + auto sync */
+const Net = {
+  init() {
+    updateNetStatus();
+    UI.renderSyncMeta();
+    UI.renderOfflineResume();
+    if (navigator.onLine) OfflineQueue.flush();
+    window.addEventListener("online", () => {
+      updateNetStatus();
+      UI.renderSyncMeta();
+      UI.renderOfflineResume();
+      OfflineQueue.flush();
+    });
+    window.addEventListener("offline", () => {
+      updateNetStatus();
+      UI.renderSyncMeta();
+      UI.renderOfflineResume();
+    });
+  }
+};
 
 /* Photo preview */
 $("#rPhoto")?.addEventListener("change", e => {
@@ -1225,7 +1912,14 @@ $("#rPhoto")?.addEventListener("change", e => {
   img.src = URL.createObjectURL(f); img.classList.remove("hidden");
 });
 
+// Keep offline resume list updated while user is on auth screen
+["#uLoginEmail", "#vId", "#aEmail"].forEach((sel) => {
+  const el = document.querySelector(sel);
+  el?.addEventListener("input", () => UI.renderOfflineResume());
+});
+
 /* Boot */
+Net.init();
 UI.sync(); UI.route();
 // Toggles: theme + density
 UI.bindToggles = function(){
@@ -1298,4 +1992,5 @@ try {
   window.Auth = Auth;
   window.Reports = Reports;
   window.Vendors = Vendors;
+  window.OfflineQueue = OfflineQueue;
 } catch (_) {}
