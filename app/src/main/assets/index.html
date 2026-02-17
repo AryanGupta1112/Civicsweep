@@ -304,9 +304,18 @@
         <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-lg font-semibold">My reports</h3>
-                <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshUserTable()">
-                    <i class="ri-refresh-line"></i>Refresh
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="uFilter" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" onchange="Reports.refreshUserTable()">
+                        <option value="all">All</option>
+                        <option value="NEW">NEW</option>
+                        <option value="ASSIGNED">ASSIGNED</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="RESOLVED">RESOLVED</option>
+                    </select>
+                    <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshUserTable()">
+                        <i class="ri-refresh-line"></i>Refresh
+                    </button>
+                </div>
             </div>
             <div id="userReports" class="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950"></div>
         </div>
@@ -331,6 +340,10 @@
                     <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Last sync: <span id="lastSyncVendor">never</span></p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <select id="vFilter" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" onchange="Reports.refreshVendorTable()">
+                        <option value="ASSIGNED">ASSIGNED</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    </select>
                     <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onclick="Reports.refreshVendorTable()">
                         <i class="ri-refresh-line"></i>Refresh
                     </button>
