@@ -8,5 +8,12 @@
             "default": true
         }
     ],
-    "java.import.gradle.java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17"
+    "java.import.gradle.java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17",
+    "workbench.editorAssociations": {
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "*.xlsx": "default",
+        "*.parquet": "duckdb.dataFileViewer",
+        "*.csv": "duckdb.dataFileViewer",
+        "*.tsv": "duckdb.dataFileViewer"
+    }
 }
