@@ -768,7 +768,9 @@ const Reports = {
     try {
       const s = Session.data; if (!s || s.role !== "user") return;
       UI.fx?.skeletonStart?.('#userReports');
-      const reports = await api("/reports/me", "GET", null, { cacheKey: "reports.me", cacheMaxAgeMs: 5 * 60 * 1000 });
+      const filter = $("#uFilter")?.value || "all";
+      const path = `/reports/me?status=${encodeURIComponent(filter)}`;
+      const reports = await api(path, "GET", null, { cacheKey: `reports.me.${filter}`, cacheMaxAgeMs: 5 * 60 * 1000 });
       if (api.lastFromCache) notifyOffline("Offline. Showing last saved reports.");
       const queued = OfflineQueue.pendingReports().map(i => OfflineQueue.toReportStub(i));
       this._userRows = [...queued, ...(reports || [])];
@@ -793,7 +795,9 @@ const Reports = {
     try {
       const s = Session.data; if (!s || s.role !== "vendor") return;
       UI.fx?.skeletonStart?.('#vendorTasks');
-      const reports = await api("/reports/vendor", "GET", null, { cacheKey: "reports.vendor", cacheMaxAgeMs: 5 * 60 * 1000 });
+      const filter = $("#vFilter")?.value || "ASSIGNED";
+      const path = `/reports/vendor?status=${encodeURIComponent(filter)}`;
+      const reports = await api(path, "GET", null, { cacheKey: `reports.vendor.${filter}`, cacheMaxAgeMs: 5 * 60 * 1000 });
       if (api.lastFromCache) notifyOffline("Offline. Showing last saved tasks.");
       UI.renderTable("#vendorTasks", (reports || []));
       UI.fx?.initTooltips?.('#vendorTasks');
@@ -1843,7 +1847,7 @@ const UI = {
 
         const title = document.createElement("div");
         title.className = "text-xs font-semibold text-slate-700 dark:text-slate-200";
-        title.textContent = ev.message || ev.type || "Event";
+        title.textContent = ev.message || ev.action || ev.type || "Event";
 
         const meta = document.createElement("div");
         meta.className = "text-[11px] text-slate-500 dark:text-slate-400";
@@ -1852,14 +1856,22 @@ const UI = {
         const actor = ev.actorRole ? `${ev.actorRole}${ev.actorId ? `:${ev.actorId}` : ""}` : "";
         meta.textContent = [whenText, actor].filter(Boolean).join(" | ");
 
+        const detail = document.createElement("div");
+        detail.className = "text-[11px] text-slate-500 dark:text-slate-400";
+        detail.textContent = ev.detail || "";
+
         body.appendChild(title);
         body.appendChild(meta);
+        if (detail.textContent) body.appendChild(detail);
         row.appendChild(dot);
         row.appendChild(body);
         el.appendChild(row);
       });
     } catch (e) {
-      el.textContent = navigator.onLine ? "Failed to load audit trail." : "Offline. Audit trail unavailable.";
+      const msg = e?.message || "";
+      if (!navigator.onLine) el.textContent = "Offline. Audit trail unavailable.";
+      else if (msg) el.textContent = `Failed to load audit trail: ${msg}`;
+      else el.textContent = "Failed to load audit trail.";
     }
   },
 
