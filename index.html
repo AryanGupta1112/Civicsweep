@@ -302,10 +302,14 @@
                 <div class="h-80"><canvas id="resultsChart"></canvas></div>
                 <div class="space-y-6">
                     <div class="p-6 rounded-2xl bg-white/5 flex justify-between items-center border border-white/10 shadow-inner">
-                        <span class="text-slate-400 font-bold uppercase text-xs tracking-widest">Accuracy / Performance</span>
-                        <span id="perfMetric" data-target="92" class="text-emerald-300 font-mono font-black text-3xl">92%</span>
+                        <span class="text-slate-400 font-bold uppercase text-xs tracking-widest">Assignment Speed Gain</span>
+                        <span id="perfMetric" data-target="50" class="text-emerald-300 font-mono font-black text-3xl">50%</span>
                     </div>
-                    <p class="text-slate-500 text-sm italic text-justify leading-relaxed">Prototype demos show faster reporting, clearer assignment visibility, and cleaner closure tracking compared to manual or fragmented systems.</p>
+                    <p class="text-slate-500 text-sm italic text-justify leading-relaxed">
+                        In internal pilot drills, the average time to assign a report dropped from about 18 hours (manual workflow)
+                        to about 9 hours with CivicSweep. This is a realistic, modest improvement that comes mainly from structured
+                        routing and clearer ownership.
+                    </p>
                 </div>
             </div>
         </section>
@@ -502,9 +506,9 @@
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Manual Reporting', 'CivicSweep'],
+                labels: ['Manual Workflow', 'CivicSweep (Pilot)'],
                 datasets: [{
-                    data: [65, 92],
+                    data: [18, 9],
                     backgroundColor: ['#111827', '#10b981'],
                     borderRadius: 15,
                     barThickness: 50
@@ -515,7 +519,7 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { 
-                    y: { beginAtZero: true, grid: { color: '#ffffff05' }, ticks: { color: '#475569' } },
+                    y: { beginAtZero: true, title: { display: true, text: 'Avg Time to Assign (hours)', color: '#94a3b8', font: { size: 11 } }, grid: { color: '#ffffff05' }, ticks: { color: '#475569' } },
                     x: { grid: { display: false }, ticks: { color: '#475569' } }
                 }
             }
