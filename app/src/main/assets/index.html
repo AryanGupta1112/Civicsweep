@@ -60,152 +60,174 @@
     </div>
 </nav>
 
-<main class="app-shell mx-auto max-w-6xl space-y-8 px-4 py-6">
-
+<main class="app-shell mx-auto max-w-6xl space-y-6 px-4 py-5 sm:py-6">
     <!-- Landing / Auth -->
     <section id="authSection" class="screen">
-        <div class="grid gap-4 lg:grid-cols-3">
-            <div class="lg:col-span-2">
-                <div class="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
-                    <div class="absolute -right-24 -top-20 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-500/10"></div>
-                    <div class="absolute -left-24 -bottom-20 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-500/10"></div>
-                    <div class="relative">
-                        <h1 class="text-3xl font-semibold">Cleaner streets, faster response</h1>
-                        <p class="mt-2 text-slate-600 dark:text-slate-400">Report waste in seconds, assign vendors, and track resolutions from a single dashboard.</p>
-                        <div class="mt-5 flex flex-wrap items-center gap-2 text-xs">
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Realtime status</span>
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Geo-tagged reports</span>
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">Photo proof</span>
-                        </div>
-                    </div>
+        <div class="auth-hero relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/85 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/75 sm:p-6">
+            <div class="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full bg-emerald-300/30 blur-3xl dark:bg-emerald-500/10"></div>
+            <div class="pointer-events-none absolute -right-20 -bottom-24 h-64 w-64 rounded-full bg-cyan-300/30 blur-3xl dark:bg-cyan-500/10"></div>
+            <div class="relative">
+                <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-emerald-50/70 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                    <i class="ri-recycle-line"></i>
+                    CivicSweep operations portal
                 </div>
-            </div>
-            <div class="grid gap-4">
-                <div class="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
-                    <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Live updates</div>
-                    <div class="mt-2 text-2xl font-semibold">Unified workflow</div>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Users, vendors, and admins stay in sync.</p>
-                </div>
-                <div class="rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/70">
-                    <div class="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Smart routing</div>
-                    <div class="mt-2 text-2xl font-semibold">Map-driven</div>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Pinpoint issues and reduce response time.</p>
+                <h1 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Login by role and start working</h1>
+                <p class="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">Citizens report issues, vendors complete assigned tasks, and admins manage assignments and approvals from one unified workflow.</p>
+                <div class="mt-4 hidden flex-wrap gap-2 text-xs sm:flex">
+                    <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">Geo-tagged reporting</span>
+                    <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">AI routing + manual override</span>
+                    <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">Offline sync support</span>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs -->
-        <div class="mt-6 rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-            <div id="offlineResume" class="hidden border-b border-slate-200 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-slate-800 dark:bg-amber-950/40 dark:text-amber-200">
-                <div class="font-semibold">Offline login</div>
-                <div class="mt-1 text-[11px] text-amber-900/70 dark:text-amber-200/70">
-                    If you already signed in on this device, you can login offline using the same credentials. Otherwise, please wait until you’re online.
+        <div class="mt-5 grid gap-4 xl:grid-cols-12">
+            <div class="xl:col-span-8 rounded-3xl border border-slate-200/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/75">
+                <div id="offlineResume" class="hidden border-b border-slate-200 bg-amber-50/70 px-5 py-4 text-sm text-amber-900 dark:border-slate-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    <div class="font-semibold">Offline login</div>
+                    <div class="mt-1 text-[11px] text-amber-900/70 dark:text-amber-200/70">If you already signed in on this device, you can login offline using the same credentials. Otherwise, please wait until you're online.</div>
+                </div>
+
+                <div class="border-b border-slate-200 px-2 dark:border-slate-800 sm:px-4">
+                    <ul class="flex flex-wrap gap-1 text-sm font-semibold" id="auth-tabs" data-tabs-toggle="#auth-tabs-content" data-tabs-active-classes="bg-emerald-600 text-white shadow" data-tabs-inactive-classes="bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" role="tablist">
+                        <li role="presentation">
+                            <button class="auth-tab-btn inline-flex items-center gap-2 rounded-xl px-4 py-3" id="user-tab" data-tabs-target="#tab-user" type="button" role="tab" aria-controls="tab-user" aria-selected="true">
+                                <i class="ri-user-line"></i>
+                                Citizen
+                            </button>
+                        </li>
+                        <li role="presentation">
+                            <button class="auth-tab-btn inline-flex items-center gap-2 rounded-xl px-4 py-3" id="vendor-tab" data-tabs-target="#tab-vendor" type="button" role="tab" aria-controls="tab-vendor" aria-selected="false">
+                                <i class="ri-truck-line"></i>
+                                Vendor
+                            </button>
+                        </li>
+                        <li role="presentation">
+                            <button class="auth-tab-btn inline-flex items-center gap-2 rounded-xl px-4 py-3" id="admin-tab" data-tabs-target="#tab-admin" type="button" role="tab" aria-controls="tab-admin" aria-selected="false">
+                                <i class="ri-shield-user-line"></i>
+                                Admin
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="auth-tabs-content" class="p-4 sm:p-5">
+                    <div id="tab-user" role="tabpanel" aria-labelledby="user-tab">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+                            <div class="border-b border-slate-200 pb-3 dark:border-slate-800">
+                                <ul class="flex flex-wrap gap-2 text-sm font-semibold" id="user-auth-tabs" data-tabs-toggle="#user-auth-tabs-content" data-tabs-active-classes="bg-slate-900 text-white dark:bg-white dark:text-slate-900" data-tabs-inactive-classes="bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" role="tablist">
+                                    <li role="presentation">
+                                        <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700" id="user-login-tab" data-tabs-target="#user-login-panel" type="button" role="tab" aria-controls="user-login-panel" aria-selected="true">
+                                            <i class="ri-login-box-line"></i>
+                                            Login
+                                        </button>
+                                    </li>
+                                    <li role="presentation">
+                                        <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700" id="user-signup-tab" data-tabs-target="#user-signup-panel" type="button" role="tab" aria-controls="user-signup-panel" aria-selected="false">
+                                            <i class="ri-user-add-line"></i>
+                                            Sign up
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div id="user-auth-tabs-content" class="pt-4">
+                                <div id="user-login-panel" role="tabpanel" aria-labelledby="user-login-tab">
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginEmail">Email</label>
+                                            <input id="uLoginEmail" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
+                                        </div>
+                                        <div>
+                                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginPass">Password</label>
+                                            <input id="uLoginPass" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                                        </div>
+                                        <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.userLogin()">
+                                            <i class="ri-login-box-line"></i>
+                                            Login
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="hidden" id="user-signup-panel" role="tabpanel" aria-labelledby="user-signup-tab">
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uName">Full name</label>
+                                            <input id="uName" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="Jane Doe"/>
+                                        </div>
+                                        <div>
+                                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uEmail">Email</label>
+                                            <input id="uEmail" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
+                                        </div>
+                                        <div>
+                                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uPass">Password</label>
+                                            <input id="uPass" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Create a password"/>
+                                        </div>
+                                        <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.userSignup()">
+                                            <i class="ri-user-add-line"></i>
+                                            Create account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden" id="tab-vendor" role="tabpanel" aria-labelledby="vendor-tab">
+                        <div class="auth-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+                            <h3 class="text-lg font-semibold">Vendor login</h3>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">View assigned tasks, upload proof, and sync progress updates.</p>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vId">Vendor ID</label>
+                                    <input id="vId" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="vendor_general"/>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vPass">Password</label>
+                                    <input id="vPass" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                                </div>
+                                <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.vendorLogin()">
+                                    <i class="ri-login-box-line"></i>
+                                    Login
+                                </button>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Examples: <code class="font-mono">vendor_general / 1234</code> and <code class="font-mono">vendor_plastic / 1234</code></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden" id="tab-admin" role="tabpanel" aria-labelledby="admin-tab">
+                        <div class="auth-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+                            <h3 class="text-lg font-semibold">Admin login</h3>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage report assignment, status flow, and verification decisions.</p>
+                            <div class="mt-4 space-y-3">
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aEmail">Admin email</label>
+                                    <input id="aEmail" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="admin@city.local"/>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aPass">Password</label>
+                                    <input id="aPass" class="block w-full rounded-xl border border-slate-300 bg-white/90 p-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
+                                </div>
+                                <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.adminLogin()">
+                                    <i class="ri-shield-user-line"></i>
+                                    Login
+                                </button>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Example: <code class="font-mono">admin@city.local / admin</code></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="border-b border-slate-200 dark:border-slate-800">
-                <ul class="flex flex-wrap -mb-px text-sm font-medium" id="auth-tabs" data-tabs-toggle="#auth-tabs-content" data-tabs-active-classes="border-emerald-600 text-emerald-700 dark:text-emerald-300" data-tabs-inactive-classes="border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400" role="tablist">
-                    <li class="me-2" role="presentation">
-                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="user-tab" data-tabs-target="#tab-user" type="button" role="tab" aria-controls="tab-user" aria-selected="true">
-                            <i class="ri-user-line"></i>User
-                        </button>
-                    </li>
-                    <li class="me-2" role="presentation">
-                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="vendor-tab" data-tabs-target="#tab-vendor" type="button" role="tab" aria-controls="tab-vendor" aria-selected="false">
-                            <i class="ri-truck-line"></i>Vendor
-                        </button>
-                    </li>
-                    <li class="me-2" role="presentation">
-                        <button class="inline-flex items-center gap-2 border-b-2 p-4" id="admin-tab" data-tabs-target="#tab-admin" type="button" role="tab" aria-controls="tab-admin" aria-selected="false">
-                            <i class="ri-shield-user-line"></i>Admin
-                        </button>
-                    </li>
+
+            <aside class="hidden xl:col-span-4 xl:block rounded-3xl border border-slate-200/70 bg-white/85 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/75">
+                <h3 class="text-base font-semibold">Before you continue</h3>
+                <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                    <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/60">Use the role that matches your access rights.</li>
+                    <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/60">Citizens can sign up directly from this page.</li>
+                    <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/60">Vendors and admins use provisioned credentials.</li>
+                    <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/60">When network is down, login works only for accounts already used on this device.</li>
                 </ul>
-            </div>
-            <div id="auth-tabs-content" class="p-4">
-                <!-- USER -->
-                <div id="tab-user" role="tabpanel" aria-labelledby="user-tab">
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                            <h3 class="text-lg font-semibold">User login</h3>
-                            <div class="mt-4 space-y-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginEmail">Email</label>
-                                    <input id="uLoginEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uLoginPass">Password</label>
-                                    <input id="uLoginPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
-                                </div>
-                                <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.userLogin()">
-                                    <i class="ri-login-box-line"></i>Login
-                                </button>
-                            </div>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                            <h3 class="text-lg font-semibold">Create account</h3>
-                            <div class="mt-4 space-y-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uName">Full name</label>
-                                    <input id="uName" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="Jane Doe"/>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uEmail">Email</label>
-                                    <input id="uEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="you@example.com"/>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="uPass">Password</label>
-                                    <input id="uPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Create a password"/>
-                                </div>
-                                <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.userSignup()">
-                                    <i class="ri-user-add-line"></i>Sign up
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VENDOR -->
-                <div class="hidden" id="tab-vendor" role="tabpanel" aria-labelledby="vendor-tab">
-                    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <h3 class="text-lg font-semibold">Vendor login</h3>
-                        <div class="mt-4 space-y-3">
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vId">Vendor ID</label>
-                                <input id="vId" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" placeholder="vendor_general"/>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="vPass">Password</label>
-                                <input id="vPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
-                            </div>
-                            <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900" onclick="Auth.vendorLogin()">
-                                <i class="ri-login-box-line"></i>Login
-                            </button>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Demo: vendor_general/1234 or vendor_plastic/1234</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ADMIN -->
-                <div class="hidden" id="tab-admin" role="tabpanel" aria-labelledby="admin-tab">
-                    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <h3 class="text-lg font-semibold">Admin login</h3>
-                        <div class="mt-4 space-y-3">
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aEmail">Admin email</label>
-                                <input id="aEmail" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="email" placeholder="admin@city.local"/>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400" for="aPass">Password</label>
-                                <input id="aPass" class="block w-full rounded-lg border border-slate-300 bg-white/80 p-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-emerald-900" type="password" placeholder="Your password"/>
-                            </div>
-                            <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100" onclick="Auth.adminLogin()">
-                                <i class="ri-shield-user-line"></i>Login
-                            </button>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Demo: admin@city.local / admin</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </aside>
         </div>
     </section>
 
