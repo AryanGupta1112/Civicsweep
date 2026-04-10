@@ -101,6 +101,7 @@
             <a href="#features" class="hover:text-emerald-300 transition">Features</a>
             <a href="#architecture" class="hover:text-emerald-300 transition">Architecture</a>
             <a href="#backend" class="hover:text-emerald-300 transition">Backend</a>
+            <a href="#verification" class="hover:text-emerald-300 transition">Verification</a>
             <a href="#results" class="hover:text-emerald-300 transition">Results</a>
             <a href="#insights" class="hover:text-emerald-300 transition">Insights</a>
             <a href="#deployment" class="hover:text-emerald-300 transition">Deployment</a>
@@ -163,22 +164,22 @@
                 <div class="glass p-6 rounded-2xl">
                     <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 2</div>
                     <h4 class="font-bold text-sm mb-2">Admin Review</h4>
-                    <p class="text-sm text-slate-500">Admin filters new reports, verifies details, and assigns a vendor.</p>
+                    <p class="text-sm text-slate-500">AI detects waste type and auto-assigns the best vendor; admins can override or re-route manually.</p>
                 </div>
                 <div class="glass p-6 rounded-2xl">
                     <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 3</div>
                     <h4 class="font-bold text-sm mb-2">Vendor Action</h4>
-                    <p class="text-sm text-slate-500">Vendor views assigned tasks and uploads completion proof.</p>
+                    <p class="text-sm text-slate-500">Vendor completes the task and uploads proof with photo + optional GPS/time metadata.</p>
                 </div>
                 <div class="glass p-6 rounded-2xl">
                     <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Step 4</div>
                     <h4 class="font-bold text-sm mb-2">Closure & Audit</h4>
-                    <p class="text-sm text-slate-500">Admin confirms proof, updates status, and closes the report.</p>
+                    <p class="text-sm text-slate-500">Auto-verification evaluates proof; if uncertain it stays IN_PROGRESS for admin review.</p>
                 </div>
             </div>
             <div class="glass p-8 rounded-3xl">
                 <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Simple Workflow Summary</h3>
-                <p class="text-sm text-slate-500 leading-relaxed">CivicSweep follows a clear loop: <span class="text-emerald-300 font-semibold">Report -> Assign -> Resolve -> Verify</span>. Each step updates status in real time, so citizens and admins can see progress without manual follow-ups.</p>
+                <p class="text-sm text-slate-500 leading-relaxed">CivicSweep follows a loop: <span class="text-emerald-300 font-semibold">Report -> Detect/Assign -> Proof -> Auto-Verify -> Admin Override</span>. Status updates are real-time and fully auditable.</p>
             </div>
         </section>
 
@@ -216,17 +217,32 @@
                 <div class="glass p-8 rounded-3xl text-center">
                     <i class="fas fa-map-marker-alt text-emerald-300 text-3xl mb-4"></i>
                     <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Geo-Tagged Reports</h3>
-                    <p class="text-sm text-slate-500">Capture location with map previews and address lookup for precise issue tracking.</p>
+                    <p class="text-sm text-slate-500">Map-based location capture with address lookup and precise coordinates.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-robot text-emerald-400 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">AI Waste Detection</h3>
+                    <p class="text-sm text-slate-500">Auto-detects waste type from photos with a manual fallback.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-random text-green-500 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Auto-Assignment</h3>
+                    <p class="text-sm text-slate-500">Routes reports to vendors by category; admins can override anytime.</p>
                 </div>
                 <div class="glass p-8 rounded-3xl text-center">
                     <i class="fas fa-camera text-emerald-400 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Photo Evidence</h3>
-                    <p class="text-sm text-slate-500">Attach photos for proof, verification, and completion auditing.</p>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Proof Upload</h3>
+                    <p class="text-sm text-slate-500">Vendors submit photo proof with optional location/time metadata.</p>
                 </div>
                 <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-people-arrows text-green-500 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Role-Based Workflow</h3>
-                    <p class="text-sm text-slate-500">Separate dashboards for citizens, admins, and vendors with clear actions.</p>
+                    <i class="fas fa-shield-check text-emerald-300 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Auto Verification</h3>
+                    <p class="text-sm text-slate-500">Checks location, freshness, duplication, and cleanup evidence.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl text-center">
+                    <i class="fas fa-cloud-upload-alt text-green-500 text-3xl mb-4"></i>
+                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Offline Sync</h3>
+                    <p class="text-sm text-slate-500">Queues reports offline and syncs with retries when online.</p>
                 </div>
             </div>
         </section>
@@ -240,7 +256,7 @@
                 </div>
                 <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
                     <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Service Layer</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Node/Express API with Prisma ORM, role-based access, report lifecycle management, and PostgreSQL persistence.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed">Node/Express API with Prisma ORM, role-based access, report lifecycle management, AI inference calls, and PostgreSQL persistence.</p>
                 </div>
             </div>
             <div class="grid md:grid-cols-3 gap-8">
@@ -250,11 +266,11 @@
                 </div>
                 <div class="glass p-7 rounded-3xl text-center">
                     <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Workflow Engine</h4>
-                    <p class="text-sm text-slate-500">Status transitions: New -> Assigned -> In Progress -> Resolved.</p>
+                    <p class="text-sm text-slate-500">Status transitions: New -> Assigned -> In Progress -> Resolved, with auto-verification as a gate.</p>
                 </div>
                 <div class="glass p-7 rounded-3xl text-center">
                     <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Audit Trail</h4>
-                    <p class="text-sm text-slate-500">Report history and vendor proof stored for accountability.</p>
+                    <p class="text-sm text-slate-500">Human-readable audit trail for every action, including AI decisions and proof checks.</p>
                 </div>
             </div>
         </section>
@@ -264,12 +280,12 @@
             <div class="grid md:grid-cols-2 gap-10">
                 <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
                     <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">civicsweep-api Service</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Private Node/Express service hosted on Render. It exposes secure REST endpoints for authentication, report creation, vendor assignment, status updates, and proof uploads.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed">Private Node/Express service hosted on Render. It exposes secure REST endpoints for authentication, report creation, AI detection, vendor assignment, status updates, and proof uploads.</p>
                     <p class="text-sm text-slate-500 leading-relaxed mt-3">Prisma ORM connects the API to PostgreSQL for reliable persistence of users, vendors, and reports.</p>
                 </div>
                 <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
                     <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Data & Storage</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Render PostgreSQL stores report metadata, status history, and user/vendor accounts. Photos are sent as base64 and stored with each report for audit and closure proof.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed">Render PostgreSQL stores report metadata, status history, audit events, and user/vendor accounts. Photos are stored as base64 for audit and verification evidence.</p>
                     <p class="text-sm text-slate-500 leading-relaxed mt-3">Environment variables manage secrets (JWT keys, database URL), keeping deployments safe and repeatable.</p>
                 </div>
             </div>
@@ -296,6 +312,51 @@
             </div>
         </section>
 
+        <section id="verification" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Verification <span class="text-emerald-300">Pipeline</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Automated Checks</h3>
+                    <ul class="text-sm text-slate-500 leading-relaxed space-y-2">
+                        <li>Duplicate proof prevention via image hash comparison.</li>
+                        <li>GPS proximity check against original report location.</li>
+                        <li>Proof recency check with allowed time window.</li>
+                        <li>AI detection on proof to estimate remaining waste.</li>
+                        <li>Before/after area reduction for cleanup evidence.</li>
+                    </ul>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Decision Logic</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">If checks pass and the score meets a minimum threshold, the report is auto-resolved. If any hard-fail or low-confidence signal appears, status stays IN_PROGRESS for admin review. Every step is logged in the audit trail for transparency.</p>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Signal Summary</h3>
+                <div class="grid md:grid-cols-5 gap-4 text-center">
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">Location</div>
+                        <p class="text-sm text-slate-500">Within allowed meters.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">Time</div>
+                        <p class="text-sm text-slate-500">Recent proof window.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">Dupes</div>
+                        <p class="text-sm text-slate-500">Rejects identical images.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">Cleanup</div>
+                        <p class="text-sm text-slate-500">Low waste coverage.</p>
+                    </div>
+                    <div class="glass p-5 rounded-2xl border border-emerald-500/30">
+                        <div class="text-[11px] uppercase tracking-widest text-emerald-300 mb-2">Reduction</div>
+                        <p class="text-sm text-slate-500">Before/after drop.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="results" class="glass p-12 rounded-[3.5rem] border-t-4 border-emerald-500">
             <h2 class="text-3xl font-black mb-12 text-center uppercase tracking-tight">Results & <span class="text-emerald-300">Analysis</span></h2>
             <div class="grid md:grid-cols-2 gap-16 items-center">
@@ -306,9 +367,7 @@
                         <span id="perfMetric" data-target="50" class="text-emerald-300 font-mono font-black text-3xl">50%</span>
                     </div>
                     <p class="text-slate-500 text-sm italic text-justify leading-relaxed">
-                        In internal pilot drills, the average time to assign a report dropped from about 18 hours (manual workflow)
-                        to about 9 hours with CivicSweep. This is a realistic, modest improvement that comes mainly from structured
-                        routing and clearer ownership.
+                        In internal pilot drills, average time to assign dropped from about 18 hours (manual workflow) to about 9 hours with CivicSweep. Early verification trials show auto-resolution only on low-risk cases, while uncertain cases remain IN_PROGRESS for admin review.
                     </p>
                 </div>
             </div>
@@ -319,7 +378,7 @@
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="glass p-8 rounded-3xl text-center">
                     <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">KPIs to Measure</div>
-                    <p class="text-sm text-slate-500 mt-2">Time-to-assign, time-to-resolve, first-response rate, and closure proof completeness.</p>
+                    <p class="text-sm text-slate-500 mt-2">Time-to-assign, time-to-resolve, auto-verification pass rate, false-positive rate, and proof completeness.</p>
                 </div>
                 <div class="glass p-8 rounded-3xl text-center">
                     <div class="text-xs uppercase tracking-widest text-slate-400 mb-2">Pilot Setup</div>
@@ -337,7 +396,7 @@
                 </div>
                 <div class="glass p-8 rounded-3xl">
                     <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Risk & Mitigation</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Potential risks include inconsistent vendor updates and incomplete photos. Mitigate with workflow prompts, proof validation, and admin review checkpoints.</p>
+                    <p class="text-sm text-slate-500 leading-relaxed">Potential risks include weak proof quality or GPS mismatch. Mitigate with proof validation, stricter thresholds, and admin review for edge cases.</p>
                 </div>
             </div>
         </section>
