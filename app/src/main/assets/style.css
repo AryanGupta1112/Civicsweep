@@ -1,18 +1,22 @@
 :root {
-  --bg1: #f5f7fb;
-  --bg2: #eef2ff;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --ring: 0 0 0 4px rgba(16, 185, 129, 0.25);
+  --bg1: #f4f8f5;
+  --bg2: #ebf2ed;
+  --ink: #101b16;
+  --muted: #5f7469;
+  --accent: #10b981;
+  --accent-2: #0f766e;
+  --ring: 0 0 0 4px rgba(16, 185, 129, 0.22);
   --ease: cubic-bezier(0.22, 0.8, 0.36, 1);
 }
 
 .dark {
-  --bg1: #0b1220;
-  --bg2: #0f172a;
-  --ink: #e2e8f0;
-  --muted: #94a3b8;
-  --ring: 0 0 0 4px rgba(16, 185, 129, 0.25);
+  --bg1: #090f0c;
+  --bg2: #0d1511;
+  --ink: #e5eee9;
+  --muted: #9fb3aa;
+  --accent: #34d399;
+  --accent-2: #2dd4bf;
+  --ring: 0 0 0 4px rgba(52, 211, 153, 0.24);
 }
 
 * { box-sizing: border-box; }
@@ -22,8 +26,8 @@ html, body {
   font-family: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   line-height: 1.5;
   color: var(--ink);
-  background: radial-gradient(1200px 600px at 10% -10%, #d1fae5 0, transparent 60%),
-              radial-gradient(1000px 500px at 110% -20%, #dbeafe 0, transparent 60%),
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(16, 185, 129, 0.24) 0, transparent 60%),
+              radial-gradient(1000px 500px at 110% -20%, rgba(245, 158, 11, 0.16) 0, transparent 60%),
               linear-gradient(180deg, var(--bg1), var(--bg2));
 }
 
@@ -32,8 +36,8 @@ html, body {
 }
 
 .dark body {
-  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.12) 0, transparent 60%),
-              radial-gradient(800px 380px at 110% -20%, rgba(56,189,248,0.12) 0, transparent 60%),
+  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.18) 0, transparent 60%),
+              radial-gradient(780px 340px at 110% -20%, rgba(250, 204, 21, 0.08) 0, transparent 60%),
               linear-gradient(180deg, var(--bg1), var(--bg2));
 }
 
@@ -58,30 +62,102 @@ body::before {
 
 .app-shell { position: relative; }
 
+.auth-hero {
+  isolation: isolate;
+}
+
+.auth-stat,
+.auth-panel,
+.auth-card {
+  transition: transform 220ms var(--ease), box-shadow 220ms var(--ease), border-color 220ms var(--ease);
+}
+
+.auth-stat:hover,
+.auth-panel:hover,
+.auth-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.dark .auth-stat:hover,
+.dark .auth-panel:hover,
+.dark .auth-card:hover {
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.45);
+}
+
+.auth-tab-btn {
+  position: relative;
+  margin: 0.5rem 0;
+}
+
+.auth-tab-btn[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: -0.28rem;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.8);
+}
+
+.auth-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.22) 48%, transparent 66%);
+  mix-blend-mode: soft-light;
+  animation: heroSweep 8s linear infinite;
+}
+
+@keyframes heroSweep {
+  0% { transform: translateX(-140%); }
+  100% { transform: translateX(140%); }
+}
+
 /* Force visible theme changes even if Tailwind dark variants don't apply */
 html[data-theme="dark"] body {
-  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.12) 0, transparent 60%),
-              radial-gradient(800px 380px at 110% -20%, rgba(56,189,248,0.12) 0, transparent 60%),
-              linear-gradient(180deg, #0b1220, #0f172a) !important;
-  color: #e2e8f0;
+  background: radial-gradient(900px 420px at 10% -10%, rgba(16,185,129,0.18) 0, transparent 60%),
+              radial-gradient(780px 340px at 110% -20%, rgba(250,204,21,0.08) 0, transparent 60%),
+              linear-gradient(180deg, #090f0c, #0d1511) !important;
+  color: #e5eee9;
 }
 
 html[data-theme="dark"] nav {
-  background-color: rgba(2, 6, 23, 0.75) !important;
-  border-color: rgba(30, 41, 59, 0.7) !important;
+  background-color: rgba(6, 15, 11, 0.78) !important;
+  border-color: rgba(40, 58, 50, 0.75) !important;
 }
 
 html[data-theme="dark"] [class*="bg-white"] {
-  background-color: rgba(15, 23, 42, 0.85) !important;
-  border-color: rgba(30, 41, 59, 0.7) !important;
+  background-color: rgba(15, 26, 20, 0.9) !important;
+  border-color: rgba(48, 67, 58, 0.7) !important;
 }
 
 html[data-theme="dark"] [class*="text-slate-"] {
-  color: #cbd5f5 !important;
+  color: #d2e1d9 !important;
 }
 
 html[data-theme="dark"] [class*="border-slate-"] {
-  border-color: rgba(30, 41, 59, 0.7) !important;
+  border-color: rgba(48, 67, 58, 0.7) !important;
+}
+
+html[data-theme="light"] nav {
+  background-color: rgba(255, 255, 255, 0.82) !important;
+}
+
+html[data-theme="light"] [class*="bg-white"] {
+  background-color: rgba(255, 255, 255, 0.86) !important;
+}
+
+button,
+.auth-tab-btn {
+  transition: transform 180ms var(--ease), filter 180ms var(--ease), box-shadow 180ms var(--ease), background-color 180ms var(--ease);
+}
+
+button:hover,
+.auth-tab-btn:hover {
+  filter: saturate(1.04);
 }
 
 #vendorDash {
@@ -111,6 +187,30 @@ html[data-theme="dark"] [class*="border-slate-"] {
 #vendorDash .grid,
 #vendorDash .flex {
   min-width: 0;
+}
+
+#reportModalCard {
+  overflow-x: hidden;
+}
+
+#reportModalTitle,
+#reportModalMeta,
+#reportModalReporter,
+#reportModalDesc,
+#reportModalAssigned,
+#reportModalAssignSource,
+#reportModalWaste,
+#reportModalAuto,
+#reportModalRoleHint,
+#reportModalLocation,
+#reportModalAddress,
+#reportModalCreated,
+#reportModalUpdated,
+#reportModalEvents,
+#reportModalEvents div {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 #progressbar {
@@ -237,6 +337,12 @@ html[data-theme="dark"] [class*="border-slate-"] {
 }
 
 @keyframes spin { to { transform: rotate(1turn); } }
+
+@media (max-width: 1024px) {
+  .auth-hero::after {
+    display: none;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * {
