@@ -96,10 +96,10 @@
         </div>
         <div class="hidden md:flex gap-8 text-[11px] uppercase tracking-widest font-bold opacity-70">
             <a href="#problem" class="hover:text-emerald-300 transition">Problem</a>
-            <a href="#methodology" class="hover:text-emerald-300 transition">Methodology</a>
             <a href="#theory" class="hover:text-emerald-300 transition">Theory</a>
-            <a href="#features" class="hover:text-emerald-300 transition">Features</a>
             <a href="#architecture" class="hover:text-emerald-300 transition">Architecture</a>
+            <a href="#features" class="hover:text-emerald-300 transition">Functions</a>
+            <a href="#methodology" class="hover:text-emerald-300 transition">Methodology</a>
             <a href="#backend" class="hover:text-emerald-300 transition">Backend</a>
             <a href="#verification" class="hover:text-emerald-300 transition">Verification</a>
             <a href="#results" class="hover:text-emerald-300 transition">Results</a>
@@ -119,6 +119,12 @@
             </p>
         </section>
 
+
+
+
+
+
+
         <section id="problem" class="grid md:grid-cols-2 gap-12 items-stretch">
             <div class="glass p-10 rounded-[2.5rem] flex flex-col justify-center border-l-4 border-emerald-500">
                 <h2 class="text-3xl font-extrabold mb-6">Problem Statement</h2>
@@ -135,6 +141,179 @@
                 </div>
             </div>
         </section>
+
+
+        <section id="theory" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Theory & <span class="text-emerald-300">Background</span></h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Urban Service Workflow</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Public service requests follow a lifecycle: report intake, validation, assignment, execution, and closure. Delays often occur at assignment and proof stages, so CivicSweep focuses on reducing handoffs and improving traceability.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Accountability Model</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Role-based access (citizen, admin, vendor) ensures each stakeholder sees only relevant actions. This aligns with governance principles: transparency, timeliness, and auditable outcomes.</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Data Quality</h4>
+                    <p class="text-sm text-slate-500">Geo-tag + photo increases report accuracy and reduces duplicate entries.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Operational Latency</h4>
+                    <p class="text-sm text-slate-500">Structured assignment reduces time-to-action and missed tasks.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Citizen Trust</h4>
+                    <p class="text-sm text-slate-500">Status visibility improves confidence in municipal response.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="architecture" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">System <span class="text-emerald-300">Architecture</span></h2>
+            <figure class="glass p-4 md:p-6 rounded-3xl border border-emerald-500/30">
+                <img src="architecture-diagram.png" alt="System architecture diagram showing client, API/service, external services, and data layer interactions" class="w-full h-auto rounded-2xl border border-white/10" loading="lazy" onerror="this.onerror=null;this.src='architecture-diagram.svg';">
+                <figcaption class="text-center text-xs uppercase tracking-widest text-slate-400 mt-4">End-to-end architecture and request/response flow</figcaption>
+            </figure>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Client Layer</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Android app hosting a responsive WebView UI (HTML/CSS/JS). Handles authentication, report creation, dashboards, and image capture.</p>
+                </div>
+                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
+                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Service Layer</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Node/Express API with Prisma ORM, role-based access, report lifecycle management, AI inference calls, and PostgreSQL persistence.</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Authentication</h4>
+                    <p class="text-sm text-slate-500">JWT-based login for citizens, vendors, and admins.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Workflow Engine</h4>
+                    <p class="text-sm text-slate-500">Status transitions: New -> Assigned -> In Progress -> Resolved, with auto-verification as a gate.</p>
+                </div>
+                <div class="glass p-7 rounded-3xl text-center">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Audit Trail</h4>
+                    <p class="text-sm text-slate-500">Human-readable audit trail for every action, including AI decisions and proof checks.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="features" class="space-y-12">
+            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Top 20 <span class="text-emerald-300">Major Functionalities</span></h2>
+            <p class="text-center text-slate-400 max-w-4xl mx-auto text-sm leading-relaxed">CivicSweep is built as a complete municipal operations workflow, not only a complaint form. The following functionalities demonstrate technical depth, operational control, and real-world deployability.</p>
+            <div class="glass p-6 md:p-8 rounded-3xl border border-emerald-500/20">
+                <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">01</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Role-Based Access Control</h3>
+                        <p class="text-sm text-slate-500">Separate permissions and dashboards for citizen, vendor, and admin roles prevent unauthorized actions and simplify workflows.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">02</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">JWT Authentication and Session Security</h3>
+                        <p class="text-sm text-slate-500">Protected API routes with token-based authentication ensure secure request handling across the entire system.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">03</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Citizen Report Submission with Image</h3>
+                        <p class="text-sm text-slate-500">Citizens submit title, description, and photo evidence in one flow, reducing ambiguity for field teams.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">04</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Automatic Geo-Tagging</h3>
+                        <p class="text-sm text-slate-500">GPS coordinates are captured at report time to improve location precision and reduce invalid assignments.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">05</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Reverse Geocoding Integration</h3>
+                        <p class="text-sm text-slate-500">OSM Nominatim converts coordinates into readable addresses for faster administrative decision-making.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">06</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">AI Waste-Type Detection</h3>
+                        <p class="text-sm text-slate-500">Roboflow-based inference classifies reported waste categories to improve routing accuracy at intake stage.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">07</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Automated Vendor Assignment</h3>
+                        <p class="text-sm text-slate-500">Reports are mapped to appropriate vendors based on category and workflow rules, reducing manual delay.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">08</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Admin Override and Reassignment</h3>
+                        <p class="text-sm text-slate-500">Administrators can manually override AI suggestions and reassign tasks in complex or uncertain cases.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">09</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Vendor Task Queue Management</h3>
+                        <p class="text-sm text-slate-500">Vendors receive structured work queues with report context, location, and expected completion workflow.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">10</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Proof-of-Cleanup Upload</h3>
+                        <p class="text-sm text-slate-500">Vendors submit completion evidence with images and optional metadata for transparent closure decisions.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">11</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Duplicate Proof Prevention</h3>
+                        <p class="text-sm text-slate-500">Image-level duplicate detection reduces reuse of old or repeated proof submissions in the closure pipeline.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">12</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Location Proximity Verification</h3>
+                        <p class="text-sm text-slate-500">Cleanup proof is validated against the original report location to confirm site-level authenticity.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">13</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Proof Recency Validation</h3>
+                        <p class="text-sm text-slate-500">Timestamp checks enforce acceptable time windows so stale evidence does not pass verification.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">14</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Before/After Quality Signal</h3>
+                        <p class="text-sm text-slate-500">The system evaluates reduction indicators to estimate whether visible waste has actually been removed.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">15</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Confidence-Based Auto Resolution</h3>
+                        <p class="text-sm text-slate-500">High-confidence reports can be auto-resolved to accelerate operations without removing admin authority.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">16</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Human-in-the-Loop Review</h3>
+                        <p class="text-sm text-slate-500">Uncertain or risky cases are retained for manual approval instead of forced automation.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">17</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Comprehensive Audit Logging</h3>
+                        <p class="text-sm text-slate-500">Every state change, decision, and actor action is recorded for traceability and governance audits.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">18</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Lifecycle Status Tracking</h3>
+                        <p class="text-sm text-slate-500">Each report follows a controlled path from NEW to RESOLVED with visible stage progression.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">19</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Offline Queue and Retry Sync</h3>
+                        <p class="text-sm text-slate-500">Local queueing enables report continuity during poor connectivity and auto-sync on reconnection.</p>
+                    </article>
+                    <article class="glass p-5 rounded-2xl border border-emerald-500/20">
+                        <div class="text-[11px] font-black text-emerald-300 mb-2 tracking-widest">20</div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest mb-2">Production-Ready Deployment Stack</h3>
+                        <p class="text-sm text-slate-500">Node.js + Express + Prisma + PostgreSQL on Render provides a maintainable and scalable backend foundation.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
 
         <section id="methodology" class="space-y-12">
             <h2 class="text-4xl font-black text-center uppercase tracking-tight">System <span class="text-emerald-300">Methodology</span></h2>
@@ -180,102 +359,6 @@
             <div class="glass p-8 rounded-3xl">
                 <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Simple Workflow Summary</h3>
                 <p class="text-sm text-slate-500 leading-relaxed">CivicSweep follows a loop: <span class="text-emerald-300 font-semibold">Report -> Detect/Assign -> Proof -> Auto-Verify -> Admin Override</span>. Status updates are real-time and fully auditable.</p>
-            </div>
-        </section>
-
-        <section id="theory" class="space-y-12">
-            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Theory & <span class="text-emerald-300">Background</span></h2>
-            <div class="grid md:grid-cols-2 gap-10">
-                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
-                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Urban Service Workflow</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Public service requests follow a lifecycle: report intake, validation, assignment, execution, and closure. Delays often occur at assignment and proof stages, so CivicSweep focuses on reducing handoffs and improving traceability.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
-                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Accountability Model</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Role-based access (citizen, admin, vendor) ensures each stakeholder sees only relevant actions. This aligns with governance principles: transparency, timeliness, and auditable outcomes.</p>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Data Quality</h4>
-                    <p class="text-sm text-slate-500">Geo-tag + photo increases report accuracy and reduces duplicate entries.</p>
-                </div>
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Operational Latency</h4>
-                    <p class="text-sm text-slate-500">Structured assignment reduces time-to-action and missed tasks.</p>
-                </div>
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Citizen Trust</h4>
-                    <p class="text-sm text-slate-500">Status visibility improves confidence in municipal response.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="features" class="space-y-12">
-            <h2 class="text-4xl font-black text-center uppercase tracking-tight">Core <span class="text-emerald-300">Features</span></h2>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-map-marker-alt text-emerald-300 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Geo-Tagged Reports</h3>
-                    <p class="text-sm text-slate-500">Map-based location capture with address lookup and precise coordinates.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-robot text-emerald-400 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">AI Waste Detection</h3>
-                    <p class="text-sm text-slate-500">Auto-detects waste type from photos with a manual fallback.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-random text-green-500 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Auto-Assignment</h3>
-                    <p class="text-sm text-slate-500">Routes reports to vendors by category; admins can override anytime.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-camera text-emerald-400 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Proof Upload</h3>
-                    <p class="text-sm text-slate-500">Vendors submit photo proof with optional location/time metadata.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-shield-check text-emerald-300 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Auto Verification</h3>
-                    <p class="text-sm text-slate-500">Checks location, freshness, duplication, and cleanup evidence.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center">
-                    <i class="fas fa-cloud-upload-alt text-green-500 text-3xl mb-4"></i>
-                    <h3 class="font-bold mb-2 uppercase text-xs tracking-widest">Offline Sync</h3>
-                    <p class="text-sm text-slate-500">Queues reports offline and syncs with retries when online.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="architecture" class="space-y-12">
-            <h2 class="text-4xl font-black text-center uppercase tracking-tight">System <span class="text-emerald-300">Architecture</span></h2>
-            <figure class="glass p-4 md:p-6 rounded-3xl border border-emerald-500/30">
-                <img src="architecture-diagram.png" alt="System architecture diagram showing client, API/service, external services, and data layer interactions" class="w-full h-auto rounded-2xl border border-white/10" loading="lazy" onerror="this.onerror=null;this.src='architecture-diagram.svg';">
-                <figcaption class="text-center text-xs uppercase tracking-widest text-slate-400 mt-4">End-to-end architecture and request/response flow</figcaption>
-            </figure>
-            <div class="grid md:grid-cols-2 gap-10">
-                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
-                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Client Layer</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Android app hosting a responsive WebView UI (HTML/CSS/JS). Handles authentication, report creation, dashboards, and image capture.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl border-l-4 border-emerald-600">
-                    <h3 class="font-bold mb-3 uppercase text-xs tracking-widest text-emerald-300">Service Layer</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed">Node/Express API with Prisma ORM, role-based access, report lifecycle management, AI inference calls, and PostgreSQL persistence.</p>
-                </div>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Authentication</h4>
-                    <p class="text-sm text-slate-500">JWT-based login for citizens, vendors, and admins.</p>
-                </div>
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Workflow Engine</h4>
-                    <p class="text-sm text-slate-500">Status transitions: New -> Assigned -> In Progress -> Resolved, with auto-verification as a gate.</p>
-                </div>
-                <div class="glass p-7 rounded-3xl text-center">
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Audit Trail</h4>
-                    <p class="text-sm text-slate-500">Human-readable audit trail for every action, including AI decisions and proof checks.</p>
-                </div>
             </div>
         </section>
 
