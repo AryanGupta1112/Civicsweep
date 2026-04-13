@@ -705,6 +705,35 @@ const Reports = {
       fr.readAsDataURL(file);
     });
   },
+  getCurrentLocationQuiet(timeoutMs = 6000) {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      let done = false;
+      const timer = setTimeout(() => {
+        if (done) return;
+        done = true;
+        resolve(null);
+      }, timeoutMs);
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve({
+            lat: Number(p.coords.latitude.toFixed(6)),
+            lng: Number(p.coords.longitude.toFixed(6))
+          });
+        },
+        () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 30000 }
+      );
+    });
+  },
   useMyLocation() {
     if (!navigator.geolocation) return toast("Geolocation not supported");
     navigator.geolocation.getCurrentPosition(p => {
@@ -877,16 +906,28 @@ const Reports = {
 
       // compress vendor proof too
       const proofBase64 = await compressImage(file, 1280, 1280, 0.7);
+      const proofLoc = await this.getCurrentLocationQuiet();
+      const payload = {
+        reportId: id,
+        proofBase64,
+        proofLat: proofLoc?.lat ?? null,
+        proofLng: proofLoc?.lng ?? null,
+        proofCapturedAt: new Date().toISOString()
+      };
 
       if (!navigator.onLine) {
-        OfflineQueue.enqueueAction("vendor.complete", { reportId: id, proofBase64 });
+        OfflineQueue.enqueueAction("vendor.complete", payload);
         toast("Offline. Completion queued.");
         updateNetStatus();
         $("#vProof").value = ""; $("#vReportId").value = "";
         return;
       }
-      await api("/reports/vendor/complete", "POST", { reportId: id, proofBase64 });
-      toast("Completed");
+      const r = await api("/reports/vendor/complete", "POST", payload);
+      if (r?.autoVerification?.autoVerified) {
+        toast("Proof auto-verified. Report resolved.");
+      } else {
+        toast("Proof uploaded. Marked for review.");
+      }
       $("#vProof").value = ""; $("#vReportId").value = "";
       this.refreshVendorTable(); this.refreshAdminTable(); this.refreshUserTable();
     } catch (e) { oops(e); }
@@ -897,6 +938,16 @@ const Reports = {
 const UI = {
   _map: null,
   _marker: null,
+  syncBodyScrollLock() {
+    const modalIds = ["mapModal", "photoModal", "reportModal"];
+    const hasOpenModal = modalIds.some((id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      if (el.classList.contains("hidden")) return false;
+      return el.getAttribute("aria-hidden") !== "true";
+    });
+    document.body.classList.toggle("overflow-hidden", hasOpenModal);
+  },
   fx: {
     reduce() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; },
     progressStart(){
@@ -1557,7 +1608,7 @@ const UI = {
     if (!modal || !card) return;
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("overflow-hidden");
+    this.syncBodyScrollLock();
     requestAnimationFrame(() => {
       modal.classList.remove("opacity-0");
       modal.classList.add("opacity-100");
@@ -1624,7 +1675,10 @@ const UI = {
     modal.classList.remove("opacity-100");
     modal.classList.add("opacity-0");
     modal.setAttribute("aria-hidden", "true");
-    setTimeout(() => modal.classList.add("hidden"), 200);
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      this.syncBodyScrollLock();
+    }, 200);
   },
 
   /* -------- Photo Modal -------- */
@@ -1636,6 +1690,7 @@ const UI = {
     img.src = src;
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
+    this.syncBodyScrollLock();
     requestAnimationFrame(() => {
       modal.classList.remove("opacity-0");
       modal.classList.add("opacity-100");
@@ -1657,7 +1712,163 @@ const UI = {
     setTimeout(() => {
       modal.classList.add("hidden");
       img.removeAttribute("src");
+      this.syncBodyScrollLock();
     }, 200);
+  },
+
+  shortId(v) {
+    const s = String(v || "");
+    if (!s) return "";
+    if (s.length <= 12) return s;
+    return `${s.slice(0, 6)}...${s.slice(-4)}`;
+  },
+
+  parseAuditDetail(detail) {
+    const out = {};
+    const src = String(detail || "");
+    if (!src) return out;
+    const re = /([a-zA-Z0-9_]+)="([^"]*)"/g;
+    let m;
+    while ((m = re.exec(src)) !== null) out[m[1]] = m[2];
+    return out;
+  },
+
+  formatAuditActor(ev) {
+    const role = String(ev?.actorRole || "").toUpperCase();
+    const id = ev?.actorId ? this.shortId(ev.actorId) : "";
+    if (!role && !id) return "System";
+    if (role === "USER") return id ? `Citizen (${id})` : "Citizen";
+    if (role === "VENDOR") return id ? `Vendor (${id})` : "Vendor";
+    if (role === "ADMIN") return id ? `Admin (${id})` : "System";
+    return id ? `${role} (${id})` : role || "System";
+  },
+
+  humanizeVerifyReason(r) {
+    const s = String(r || "");
+    if (!s) return "";
+    if (s === "proof_received") return "Proof image received.";
+    if (s === "proof_location_missing") return "Proof location was not available.";
+    if (s.startsWith("location_ok:")) return `Location matched (${s.split(":")[1]}).`;
+    if (s.startsWith("location_mismatch:")) return `Location mismatch (${s.split(":")[1]} away from report location).`;
+    if (s === "proof_time_ok") return "Proof timestamp is within allowed time window.";
+    if (s === "proof_time_out_of_range") return "Proof timestamp is outside allowed time window.";
+    if (s === "proof_time_missing") return "Proof timestamp missing.";
+    if (s === "proof_clean:no_prediction") return "No waste detected in proof image.";
+    if (s.startsWith("proof_clean:low_conf_")) return `Low remaining waste confidence (${s.replace("proof_clean:low_conf_", "")}).`;
+    if (s.startsWith("proof_clean:low_coverage_")) return `Low remaining waste area coverage (${s.replace("proof_clean:low_coverage_", "")}).`;
+    if (s.startsWith("proof_not_clean:")) return `Waste still detected (${s.replace("proof_not_clean:", "").replace(/_/g, " ")}).`;
+    if (s === "proof_detection_unavailable") return "Proof detection service unavailable.";
+    if (s === "proof_same_as_report_image") return "Proof image is the same as the original report image; manual review required.";
+    if (s.startsWith("proof_coverage:")) return `Proof image waste coverage: ${s.split(":")[1]}.`;
+    if (s.startsWith("before_coverage:")) return `Original image waste coverage: ${s.split(":")[1]}.`;
+    if (s.startsWith("pixel_reduction:ok_")) return `Waste area reduced sufficiently (${s.replace("pixel_reduction:ok_", "")}).`;
+    if (s.startsWith("pixel_reduction:low_")) return `Waste area reduction is too low (${s.replace("pixel_reduction:low_", "")}).`;
+    if (s === "pixel_reduction:baseline_too_low") return "Original waste area was too small for reliable pixel comparison.";
+    if (s === "pixel_reduction:unavailable") return "Pixel-level before/after comparison unavailable.";
+    if (s === "pixel_reduction:no_before_image") return "Original report image missing for pixel comparison.";
+    if (s === "waste_reduction:to_none") return "Waste appears fully removed vs original report.";
+    if (s.startsWith("waste_reduction:ok_")) return `Waste reduced sufficiently (${s.replace("waste_reduction:ok_", "")}).`;
+    if (s.startsWith("waste_reduction:low_")) return `Waste reduction insufficient (${s.replace("waste_reduction:low_", "")}).`;
+    if (s === "baseline_missing:clean_proof") return "Original confidence unavailable, but proof looks clean.";
+    if (s === "type_consistency:matched") return "Detected waste type remained consistent.";
+    if (s === "decision:auto_verified") return "System decision: auto-verified.";
+    if (s === "decision:manual_review") return "System decision: manual review required.";
+    return s.replace(/_/g, " ");
+  },
+
+  normalizeStatusText(v) {
+    const s = String(v || "").toUpperCase();
+    if (!s) return "";
+    if (s === "NEW") return "NEW";
+    if (s === "ASSIGNED") return "ASSIGNED";
+    if (s === "IN_PROGRESS") return "IN PROGRESS";
+    if (s === "RESOLVED") return "RESOLVED";
+    return s;
+  },
+
+  formatAuditEvent(ev) {
+    const action = String(ev?.action || ev?.type || "").toLowerCase();
+    const detailRaw = String(ev?.detail || "");
+    const d = this.parseAuditDetail(detailRaw);
+
+    if (action === "created") {
+      return {
+        title: "Report submitted",
+        result: "Report has been registered in the system.",
+        detail: d.title ? `Title: ${d.title}` : ""
+      };
+    }
+    if (action === "waste_detected") {
+      const wt = d.wasteType || "unknown";
+      const conf = d.confidence ? `${Math.round(Number(d.confidence) * 100)}%` : "";
+      return {
+        title: "Waste type detected",
+        result: "AI analysis completed for initial report photo.",
+        detail: conf ? `${wt} (${conf})` : wt
+      };
+    }
+    if (action === "assigned" || action === "auto_assigned") {
+      const id = d.vendorId ? this.shortId(d.vendorId) : "";
+      return {
+        title: action === "auto_assigned" ? "Auto-assigned to vendor" : "Assigned to vendor",
+        result: "Task routed to vendor queue.",
+        detail: id ? `Vendor ID: ${id}` : ""
+      };
+    }
+    if (action === "auto_assign_note") {
+      return {
+        title: "Auto-assignment note",
+        result: "Fallback or routing note generated.",
+        detail: detailRaw
+      };
+    }
+    if (action === "status_changed") {
+      const st = d.status || "";
+      return {
+        title: "Status updated",
+        result: st ? `Current status is ${this.normalizeStatusText(st)}.` : "Status was changed.",
+        detail: st ? `New status: ${st}` : detailRaw
+      };
+    }
+    if (action === "proof_submitted") {
+      const parts = [];
+      if (d.lat && d.lng) parts.push(`Location: ${d.lat}, ${d.lng}`);
+      if (d.capturedAt) parts.push(`Captured: ${new Date(d.capturedAt).toLocaleString()}`);
+      return {
+        title: "Proof uploaded by vendor",
+        result: "Cleanup proof stored and sent for verification.",
+        detail: parts.join(" | ")
+      };
+    }
+    if (action === "auto_verification") {
+      const verified = String(d.autoVerified || "").toLowerCase() === "true";
+      const score = d.score ? `Verification score: ${d.score}` : "";
+      const proofCoverage = d.proofWasteCoverage
+        ? `Proof waste coverage: ${Math.round(Number(d.proofWasteCoverage) * 100)}%`
+        : "";
+      const reasonLines = d.reasons
+        ? d.reasons
+            .split(";")
+            .filter(Boolean)
+            .map((r) => this.humanizeVerifyReason(r))
+            .filter(Boolean)
+            .slice(0, 6)
+            .join(" ")
+        : "";
+      return {
+        title: verified ? "Auto-verification passed" : "Auto-verification needs review",
+        result: verified
+          ? "System marked this cleanup as successful."
+          : "System could not confidently verify cleanup; admin review required.",
+        detail: [score, proofCoverage, reasonLines].filter(Boolean).join(" ")
+      };
+    }
+
+    return {
+      title: action ? action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "Event",
+      result: "",
+      detail: detailRaw
+    };
   },
 
   /* -------- Report Modal -------- */
@@ -1748,7 +1959,7 @@ const UI = {
       if (role === "user") {
         roleHint.textContent = "You will see status updates here. If it stays NEW, it is waiting for admin assignment.";
       } else if (role === "vendor") {
-        roleHint.textContent = "Complete the task and upload proof once finished. Status will update to RESOLVED.";
+        roleHint.textContent = "Upload proof after cleanup. The system may auto-verify; admin can still override.";
       } else if (role === "admin") {
         roleHint.textContent = "You can reassign the vendor or update status anytime from the admin dashboard.";
       } else {
@@ -1805,7 +2016,7 @@ const UI = {
 
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("overflow-hidden");
+    this.syncBodyScrollLock();
     requestAnimationFrame(() => {
       modal.classList.remove("opacity-0");
       modal.classList.add("opacity-100");
@@ -1837,31 +2048,38 @@ const UI = {
       }
       events.forEach(ev => {
         const row = document.createElement("div");
-        row.className = "flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950";
+        row.className = "flex min-w-0 items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-950";
 
         const dot = document.createElement("span");
         dot.className = "mt-1 h-2 w-2 rounded-full bg-emerald-500/80 flex-shrink-0";
 
         const body = document.createElement("div");
-        body.className = "min-w-0";
+        body.className = "min-w-0 flex-1";
+
+        const pretty = this.formatAuditEvent(ev);
 
         const title = document.createElement("div");
-        title.className = "text-xs font-semibold text-slate-700 dark:text-slate-200";
-        title.textContent = ev.message || ev.action || ev.type || "Event";
+        title.className = "text-xs font-semibold text-slate-700 break-words dark:text-slate-200";
+        title.textContent = pretty.title;
 
         const meta = document.createElement("div");
-        meta.className = "text-[11px] text-slate-500 dark:text-slate-400";
+        meta.className = "text-[11px] text-slate-500 break-words dark:text-slate-400";
         const when = ev.createdAt ? new Date(ev.createdAt) : null;
         const whenText = when && !Number.isNaN(when.getTime()) ? when.toLocaleString() : "";
-        const actor = ev.actorRole ? `${ev.actorRole}${ev.actorId ? `:${ev.actorId}` : ""}` : "";
+        const actor = this.formatAuditActor(ev);
         meta.textContent = [whenText, actor].filter(Boolean).join(" | ");
 
+        const result = document.createElement("div");
+        result.className = "text-[11px] text-slate-700 break-words dark:text-slate-200";
+        result.textContent = pretty.result || "";
+
         const detail = document.createElement("div");
-        detail.className = "text-[11px] text-slate-500 dark:text-slate-400";
-        detail.textContent = ev.detail || "";
+        detail.className = "text-[11px] text-slate-500 break-words dark:text-slate-400";
+        detail.textContent = pretty.detail || "";
 
         body.appendChild(title);
         body.appendChild(meta);
+        if (result.textContent) body.appendChild(result);
         if (detail.textContent) body.appendChild(detail);
         row.appendChild(dot);
         row.appendChild(body);
@@ -1886,7 +2104,7 @@ const UI = {
     modal.setAttribute("aria-hidden", "true");
     setTimeout(() => {
       modal.classList.add("hidden");
-      document.body.classList.remove("overflow-hidden");
+      this.syncBodyScrollLock();
     }, 200);
   }
 };
