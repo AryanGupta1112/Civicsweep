@@ -51,7 +51,7 @@ const nativeLog = (msg) => {
 
 /* ---------------- Persistence: SharedPreferences via bridge ---------------- */
 const Store = {
-  hasNative: !!(window.NativeStore && NativeStore.getItem),
+  hasNative: !!(window.NativeStore && window.NativeStore.getItem),
   get(key, fallback = null) {
     try {
       if (this.hasNative) {
@@ -65,13 +65,17 @@ const Store = {
     }
   },
   set(key, val) {
-    const json = JSON.stringify(val);
-    if (this.hasNative) NativeStore.setItem(key, json);
-    else localStorage.setItem(key, json);
+    try {
+      const json = JSON.stringify(val);
+      if (this.hasNative) window.NativeStore.setItem(key, json);
+      else localStorage.setItem(key, json);
+    } catch (_) {}
   },
   remove(key) {
-    if (this.hasNative) NativeStore.removeItem(key);
-    else localStorage.removeItem(key);
+    try {
+      if (this.hasNative) window.NativeStore.removeItem(key);
+      else localStorage.removeItem(key);
+    } catch (_) {}
   }
 };
 
@@ -80,7 +84,8 @@ const Cache = {
   get(key, maxAgeMs = 10 * 60 * 1000) {
     const rec = Store.get(`cache:${key}`, null);
     if (!rec || typeof rec !== "object") return null;
-    if (rec.t && (Date.now() - rec.t) > maxAgeMs) return null;
+    if (typeof rec.t !== "number" || !Number.isFinite(rec.t)) return null;
+    if ((Date.now() - rec.t) > maxAgeMs) return null;
     return rec.v;
   },
   set(key, val) {
@@ -89,6 +94,7 @@ const Cache = {
 };
 
 function isNetworkError(err) {
+  if (err?.name === "AbortError") return false;
   if (!navigator.onLine) return true;
   const msg = String(err?.message || "");
   return err?.name === "TypeError" || /failed to fetch|networkerror|load failed|network/i.test(msg);
@@ -163,7 +169,9 @@ function setOfflineAccounts(list) {
 }
 
 function accountKey(role, loginId) {
-  return `${String(role || "").toLowerCase()}:${String(loginId || "").toLowerCase()}`;
+  const normalizedRole = String(role || "").trim().toLowerCase();
+  const normalizedLogin = String(loginId || "").trim().toLowerCase();
+  return `${normalizedRole}:${normalizedLogin}`;
 }
 
 function rememberSession(session, token, identifier) {
